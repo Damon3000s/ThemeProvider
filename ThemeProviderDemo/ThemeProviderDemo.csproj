@@ -1,0 +1,11 @@
+﻿<Project Sdk="ktsu.Sdk.ImGuiApp">
+
+  <ItemGroup>
+    <PackageReference Include="ktsu.ImGuiApp" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ThemeProvider\ThemeProvider.csproj" />
+  </ItemGroup>
+
+</Project>
