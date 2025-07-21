@@ -2,223 +2,13 @@
 // All rights reserved.
 // Licensed under the MIT license.
 
-namespace ktsu.ThemeProvider;
+namespace ktsu.ThemeProvider.Engines;
 using System.Collections.Immutable;
 using System.Numerics;
-
-/// <summary>
-/// Represents a semantic request for colors, describing the desired characteristics
-/// rather than specific colors. This allows the system to generate appropriate
-/// colors that match the theme while meeting accessibility requirements.
-/// </summary>
-public readonly record struct SemanticColorRequest
-{
-	/// <summary>The primary semantic role being requested</summary>
-	public ColorRole PrimaryRole { get; init; }
-
-	/// <summary>Related roles that should be considered for harmony</summary>
-	public ImmutableArray<ColorRole> RelatedRoles { get; init; } = [];
-
-	/// <summary>Desired temperature bias (-1.0 = cool, 1.0 = warm)</summary>
-	public float DesiredTemperature { get; init; } = 0.0f;
-
-	/// <summary>Desired energy level (0.0 = calm, 1.0 = energetic)</summary>
-	public float DesiredEnergy { get; init; } = 0.5f;
-
-	/// <summary>Desired formality level (0.0 = casual, 1.0 = formal)</summary>
-	public float DesiredFormality { get; init; } = 0.5f;
-
-	/// <summary>Required accessibility level</summary>
-	public AccessibilityLevel AccessibilityRequirement { get; init; } = AccessibilityLevel.AA;
-
-	/// <summary>Background color this will be used against (for contrast calculation)</summary>
-	public RgbColor? BackgroundColor { get; init; }
-
-	/// <summary>Whether this is for large text (affects contrast requirements)</summary>
-	public bool IsLargeText { get; init; } = false;
-
-	/// <summary>Importance weight (0.0 = low priority, 1.0 = critical)</summary>
-	public float ImportanceWeight { get; init; } = 0.5f;
-
-	/// <summary>Optional constraints on the final color</summary>
-	public ColorConstraints? Constraints { get; init; }
-
-	/// <summary>
-	/// Initializes a new instance of the <see cref="SemanticColorRequest"/> record struct
-	/// with default values for all properties.
-	/// </summary>
-	public SemanticColorRequest()
-	{
-	}
-}
-
-/// <summary>
-/// Defines constraints that can be applied to color generation.
-/// </summary>
-public readonly record struct ColorConstraints
-{
-	/// <summary>Minimum lightness (0.0 = black, 1.0 = white)</summary>
-	public float? MinLightness { get; init; }
-
-	/// <summary>Maximum lightness (0.0 = black, 1.0 = white)</summary>
-	public float? MaxLightness { get; init; }
-
-	/// <summary>Minimum chroma/saturation</summary>
-	public float? MinChroma { get; init; }
-
-	/// <summary>Maximum chroma/saturation</summary>
-	public float? MaxChroma { get; init; }
-
-	/// <summary>Preferred hue range (in degrees, 0-360)</summary>
-	public (float Min, float Max)? HueRange { get; init; }
-
-	/// <summary>Colors to avoid (maintain distance from)</summary>
-	public ImmutableArray<RgbColor> AvoidColors { get; init; } = [];
-
-	/// <summary>Minimum distance to maintain from avoid colors</summary>
-	public float AvoidanceDistance { get; init; } = 0.1f;
-
-	/// <summary>
-	/// Initializes a new instance of the <see cref="ColorConstraints"/> record struct
-	/// with default values for all properties.
-	/// </summary>
-	public ColorConstraints()
-	{
-	}
-}
-
-/// <summary>
-/// Represents a semantic graph of color relationships for an application.
-/// This describes how colors should work together without specifying exact colors.
-/// </summary>
-public sealed record SemanticColorGraph
-{
-	/// <summary>All color requests in this graph</summary>
-	public required ImmutableArray<SemanticColorRequest> Requests { get; init; }
-
-	/// <summary>Relationships between color requests that should be harmonious</summary>
-	public ImmutableArray<(int FromIndex, int ToIndex, float HarmonyWeight)> Relationships { get; init; } = [];
-
-	/// <summary>Global constraints that apply to the entire palette</summary>
-	public GlobalConstraints GlobalConstraints { get; init; } = new();
-
-	/// <summary>
-	/// Creates a builder for constructing semantic color graphs.
-	/// </summary>
-	public static SemanticColorGraphBuilder CreateBuilder() => new();
-}
-
-/// <summary>
-/// Global constraints that apply to an entire color palette.
-/// </summary>
-public readonly record struct GlobalConstraints
-{
-	/// <summary>Overall color harmony preference (0.0 = diverse, 1.0 = harmonious)</summary>
-	public float HarmonyPreference { get; init; } = 0.7f;
-
-	/// <summary>Overall accessibility priority (0.0 = aesthetics first, 1.0 = accessibility first)</summary>
-	public float AccessibilityPriority { get; init; } = 0.8f;
-
-	/// <summary>Color distribution preference (0.0 = clustered, 1.0 = distributed)</summary>
-	public float DistributionPreference { get; init; } = 0.6f;
-
-	/// <summary>Whether to prefer theme authenticity over exact semantic matching</summary>
-	public bool PreferThemeAuthenticity { get; init; } = true;
-
-	/// <summary>
-	/// Initializes a new instance of the <see cref="GlobalConstraints"/> record struct
-	/// with default values for all properties.
-	/// </summary>
-	public GlobalConstraints()
-	{
-	}
-}
-
-/// <summary>
-/// Builder for creating semantic color graphs with fluent API.
-/// </summary>
-public sealed class SemanticColorGraphBuilder
-{
-	private readonly List<SemanticColorRequest> requests = [];
-	private readonly List<(int, int, float)> relationships = [];
-	private GlobalConstraints globalConstraints = new();
-
-	/// <summary>Adds a color request to the graph.</summary>
-	public SemanticColorGraphBuilder AddRequest(SemanticColorRequest request)
-	{
-		requests.Add(request);
-		return this;
-	}
-
-	/// <summary>Adds a simple color request by role.</summary>
-	public SemanticColorGraphBuilder AddRequest(ColorRole role,
-		AccessibilityLevel accessibility = AccessibilityLevel.AA,
-		RgbColor? background = null,
-		bool isLargeText = false)
-	{
-		return AddRequest(new SemanticColorRequest
-		{
-			PrimaryRole = role,
-			AccessibilityRequirement = accessibility,
-			BackgroundColor = background,
-			IsLargeText = isLargeText,
-			ImportanceWeight = role == ColorRole.Text ? 1.0f : 0.5f
-		});
-	}
-
-	/// <summary>Adds a harmony relationship between two requests.</summary>
-	public SemanticColorGraphBuilder AddHarmony(int fromIndex, int toIndex, float weight = 1.0f)
-	{
-		relationships.Add((fromIndex, toIndex, weight));
-		return this;
-	}
-
-	/// <summary>Sets global constraints for the entire palette.</summary>
-	public SemanticColorGraphBuilder WithGlobalConstraints(GlobalConstraints constraints)
-	{
-		globalConstraints = constraints;
-		return this;
-	}
-
-	/// <summary>Builds the semantic color graph.</summary>
-	public SemanticColorGraph Build()
-	{
-		return new SemanticColorGraph
-		{
-			Requests = [.. requests],
-			Relationships = [.. relationships],
-			GlobalConstraints = globalConstraints
-		};
-	}
-}
-
-/// <summary>
-/// Result of semantic palette generation, containing the generated colors
-/// and metadata about how well the requirements were satisfied.
-/// </summary>
-public sealed record SemanticPaletteResult
-{
-	/// <summary>The generated colors, indexed to match the input requests</summary>
-	public required ImmutableArray<RgbColor> GeneratedColors { get; init; }
-
-	/// <summary>How well each color satisfies its accessibility requirements (0.0 = fail, 1.0 = perfect)</summary>
-	public required ImmutableArray<float> AccessibilityScores { get; init; }
-
-	/// <summary>How well each color matches its semantic requirements (0.0 = poor, 1.0 = perfect)</summary>
-	public required ImmutableArray<float> SemanticMatchScores { get; init; }
-
-	/// <summary>Overall harmony score for the entire palette</summary>
-	public required float OverallHarmonyScore { get; init; }
-
-	/// <summary>Whether all critical accessibility requirements were met</summary>
-	public bool MeetsAccessibilityRequirements => AccessibilityScores.All(score => score >= 0.8f);
-
-	/// <summary>Warnings or notes about the generation process</summary>
-	public ImmutableArray<string> Warnings { get; init; } = [];
-
-	/// <summary>Additional metadata about the generation process</summary>
-	public ImmutableDictionary<string, object> Metadata { get; init; } = ImmutableDictionary<string, object>.Empty;
-}
+using ktsu.ThemeProvider.Core;
+using ktsu.ThemeProvider.Extensions;
+using ktsu.ThemeProvider.Semantic;
+using ktsu.ThemeProvider.Themes;
 
 /// <summary>
 /// Main engine for generating semantic color palettes from themes.
@@ -285,7 +75,7 @@ public sealed class SemanticPaletteEngine(ThemeDefinition theme, int? seed = nul
 			List<ColorCandidate> requestCandidates = [];
 
 			// Start with exact theme matches
-			if (theme.TryGetColor(request.PrimaryRole, out ColorProperties themeColor))
+			if (theme.TryGetColor(request.PrimarySpec, out ColorProperties themeColor))
 			{
 				requestCandidates.Add(new ColorCandidate
 				{
@@ -327,9 +117,9 @@ public sealed class SemanticPaletteEngine(ThemeDefinition theme, int? seed = nul
 			request.ImportanceWeight
 		);
 
-		foreach ((ColorRole role, ColorProperties color) in theme.Colors)
+		foreach ((SemanticColorSpec spec, ColorProperties color) in theme.Colors)
 		{
-			if (role == request.PrimaryRole)
+			if (spec.Equals(request.PrimarySpec))
 			{
 				continue; // Already handled exact match
 			}
@@ -343,7 +133,7 @@ public sealed class SemanticPaletteEngine(ThemeDefinition theme, int? seed = nul
 				Source = ColorSource.ThemeSemantic,
 				SemanticDistance = distance,
 				ThemeAuthenticity = 0.8f - (distance * 0.2f),
-				SourceRole = role
+				SourceSpec = spec
 			});
 		}
 
@@ -355,7 +145,7 @@ public sealed class SemanticPaletteEngine(ThemeDefinition theme, int? seed = nul
 		List<ColorCandidate> candidates = [];
 
 		// Find the best theme color as a starting point
-		KeyValuePair<ColorRole, ColorProperties> bestMatch = theme.Colors.MinBy(kvp =>
+		KeyValuePair<SemanticColorSpec, ColorProperties> bestMatch = theme.Colors.MinBy(kvp =>
 		{
 			Vector4 targetSemantic = new(
 				request.DesiredTemperature,
@@ -562,7 +352,7 @@ public sealed class SemanticPaletteEngine(ThemeDefinition theme, int? seed = nul
 					}
 					else
 					{
-						warnings.Add($"Could not meet accessibility requirement {request.AccessibilityRequirement} for role {request.PrimaryRole}");
+						warnings.Add($"Could not meet accessibility requirement {request.AccessibilityRequirement} for spec {request.PrimarySpec}");
 					}
 				}
 			}
@@ -586,6 +376,7 @@ public sealed class SemanticPaletteEngine(ThemeDefinition theme, int? seed = nul
 			// Create target semantic vector
 			ColorProperties targetProperties = ColorProperties.FromRgb(
 				colors[i],
+				request.PrimarySpec,
 				request.ImportanceWeight,
 				request.DesiredTemperature,
 				request.DesiredEnergy,
@@ -593,13 +384,13 @@ public sealed class SemanticPaletteEngine(ThemeDefinition theme, int? seed = nul
 			);
 
 			// Find the closest theme color for comparison
-			if (theme.TryGetColor(request.PrimaryRole, out ColorProperties themeColor))
+			if (theme.TryGetColor(request.PrimarySpec, out ColorProperties themeColor))
 			{
 				scores[i] = 1.0f - (targetProperties.SemanticDistanceTo(themeColor) * 0.5f);
 			}
 			else
 			{
-				(ColorRole _, ColorProperties closestColor) = theme.FindClosestColor(targetProperties);
+				(SemanticColorSpec _, ColorProperties closestColor) = theme.FindClosestColor(targetProperties);
 				scores[i] = 1.0f - (targetProperties.SemanticDistanceTo(closestColor) * 0.3f);
 			}
 
@@ -653,7 +444,7 @@ public sealed class SemanticPaletteEngine(ThemeDefinition theme, int? seed = nul
 		public required ColorSource Source { get; init; }
 		public required float SemanticDistance { get; init; }
 		public required float ThemeAuthenticity { get; init; }
-		public ColorRole? SourceRole { get; init; }
+		public SemanticColorSpec? SourceSpec { get; init; }
 
 		public float QualityScore => (ThemeAuthenticity * 0.6f) + ((1.0f - SemanticDistance) * 0.4f);
 	}
@@ -663,28 +454,5 @@ public sealed class SemanticPaletteEngine(ThemeDefinition theme, int? seed = nul
 		ThemeExact,
 		ThemeSemantic,
 		Synthetic
-	}
-}
-
-/// <summary>
-/// Provides extension methods for the <see cref="Random"/> class.
-/// </summary>
-public static class RandomExtensions
-{
-	/// <returns>A double representing a normally distributed random value (mean=0, stddev=1).</returns>
-	[System.Diagnostics.CodeAnalysis.SuppressMessage("Security", "CA5394:Do not use insecure randomness", Justification = "<Pending>")]
-	public static double NextGaussian(this Random random)
-	{
-		ArgumentNullException.ThrowIfNull(random);
-
-		// Box-Muller transform
-		static double NextGaussianInternal(Random rnd)
-		{
-			double u1 = 1.0 - rnd.NextDouble();
-			double u2 = 1.0 - rnd.NextDouble();
-			return Math.Sqrt(-2.0 * Math.Log(u1)) * Math.Sin(2.0 * Math.PI * u2);
-		}
-
-		return NextGaussianInternal(random);
 	}
 }

@@ -2,7 +2,7 @@
 // All rights reserved.
 // Licensed under the MIT license.
 
-namespace ktsu.ThemeProvider;
+namespace ktsu.ThemeProvider.Core;
 using System.Numerics;
 
 /// <summary>
