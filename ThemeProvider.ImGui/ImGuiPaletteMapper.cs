@@ -48,73 +48,75 @@ public sealed class ImGuiPaletteMapper : IPaletteMapper<ImGuiCol, Vector4>
 
 		// Interactive elements (widgets)
 		AddColorIfAvailable(colors, theme, ImGuiCol.Button,
-			new(SemanticMeaning.CallToAction, VisualRole.Widget, ImportanceLevel.Critical, isPrimary: true));
+			new(SemanticMeaning.Primary, VisualRole.Widget, ImportanceLevel.Critical, isPrimary: true));
 		AddColorIfAvailable(colors, theme, ImGuiCol.ButtonHovered,
-			new(SemanticMeaning.CallToAction, VisualRole.Widget, ImportanceLevel.Critical, isPrimary: true), 1.1f);
+			new(SemanticMeaning.Primary, VisualRole.Widget, ImportanceLevel.Critical, isPrimary: true), 1.1f);
 		AddColorIfAvailable(colors, theme, ImGuiCol.ButtonActive,
-			new(SemanticMeaning.CallToAction, VisualRole.Widget, ImportanceLevel.Critical, isPrimary: true), 0.9f);
+			new(SemanticMeaning.Secondary, VisualRole.Widget, ImportanceLevel.Critical, isPrimary: true), 0.9f);
 
-		// Frame/input elements (using actual Catppuccin specs)
+		// Frame/input elements (using structural colors only)
 		AddColorIfAvailable(colors, theme, ImGuiCol.FrameBg,
 			new(SemanticMeaning.Primary, VisualRole.Surface, ImportanceLevel.Medium, isPrimary: true)); // Surface1
 		AddColorIfAvailable(colors, theme, ImGuiCol.FrameBgHovered,
 			new(SemanticMeaning.Primary, VisualRole.Surface, ImportanceLevel.High, isPrimary: true)); // Surface2
 		AddColorIfAvailable(colors, theme, ImGuiCol.FrameBgActive,
-			new(SemanticMeaning.Information, VisualRole.Widget, ImportanceLevel.Medium, isPrimary: true)); // Sky blue
+			new(SemanticMeaning.Secondary, VisualRole.Surface, ImportanceLevel.High, isPrimary: true)); // Peach
 
-		// Headers (using actual Catppuccin specs)
+		// Headers (using structural colors only)
 		AddColorIfAvailable(colors, theme, ImGuiCol.Header,
 			new(SemanticMeaning.Primary, VisualRole.Surface, ImportanceLevel.Low, isPrimary: true)); // Surface0
 		AddColorIfAvailable(colors, theme, ImGuiCol.HeaderHovered,
-			new(SemanticMeaning.Information, VisualRole.Widget, ImportanceLevel.Medium, isPrimary: true)); // Sky
+			new(SemanticMeaning.Primary, VisualRole.Surface, ImportanceLevel.Medium, isPrimary: true)); // Surface1
 		AddColorIfAvailable(colors, theme, ImGuiCol.HeaderActive,
-			new(SemanticMeaning.CallToAction, VisualRole.Widget, ImportanceLevel.Critical, isPrimary: true)); // Mauve
+			new(SemanticMeaning.Secondary, VisualRole.Surface, ImportanceLevel.High, isPrimary: true)); // Peach
 
-		// Scrollbars (using actual Catppuccin specs)
+		// Scrollbars (using structural colors only)
 		AddColorIfAvailable(colors, theme, ImGuiCol.ScrollbarBg,
-			new(SemanticMeaning.Primary, VisualRole.Background, ImportanceLevel.Low, isPrimary: false)); // Crust
+			new(SemanticMeaning.Primary, VisualRole.Surface, ImportanceLevel.Low, isPrimary: false)); // Crust
 		AddColorIfAvailable(colors, theme, ImGuiCol.ScrollbarGrab,
-			new(SemanticMeaning.Primary, VisualRole.Widget, ImportanceLevel.Low, isPrimary: true)); // Sapphire
+			new(SemanticMeaning.Primary, VisualRole.Widget, ImportanceLevel.Medium, isPrimary: true)); // Surface1
 		AddColorIfAvailable(colors, theme, ImGuiCol.ScrollbarGrabHovered,
-			new(SemanticMeaning.Information, VisualRole.Widget, ImportanceLevel.Medium, isPrimary: true)); // Sky
+			new(SemanticMeaning.Primary, VisualRole.Surface, ImportanceLevel.High, isPrimary: true)); // Surface2
 		AddColorIfAvailable(colors, theme, ImGuiCol.ScrollbarGrabActive,
-			new(SemanticMeaning.CallToAction, VisualRole.Widget, ImportanceLevel.Critical, isPrimary: true)); // Mauve
+			new(SemanticMeaning.Secondary, VisualRole.Surface, ImportanceLevel.High, isPrimary: true)); // Peach
 
-		// Checkmarks and selections
+		// Checkmarks and selections (using structural colors only)
 		AddColorIfAvailable(colors, theme, ImGuiCol.CheckMark,
-			new(SemanticMeaning.CallToAction, VisualRole.Widget, ImportanceLevel.Critical, isPrimary: true));
+			new(SemanticMeaning.Primary, VisualRole.Widget, ImportanceLevel.High, isPrimary: true));
 		AddColorIfAvailable(colors, theme, ImGuiCol.SliderGrab,
-			new(SemanticMeaning.CallToAction, VisualRole.Widget, ImportanceLevel.Critical, isPrimary: true));
+			new(SemanticMeaning.Primary, VisualRole.Widget, ImportanceLevel.High, isPrimary: true));
 		AddColorIfAvailable(colors, theme, ImGuiCol.SliderGrabActive,
-			new(SemanticMeaning.CallToAction, VisualRole.Widget, ImportanceLevel.Critical, isPrimary: true), 1.2f);
+			new(SemanticMeaning.Secondary, VisualRole.Widget, ImportanceLevel.High, isPrimary: true), 1.2f);
 
-		// Separators (using actual Catppuccin specs)
+		// Separators (using structural colors only)
 		AddColorIfAvailable(colors, theme, ImGuiCol.Separator,
 			new(SemanticMeaning.Primary, VisualRole.Surface, ImportanceLevel.Medium, isPrimary: true)); // Surface1
 		AddColorIfAvailable(colors, theme, ImGuiCol.SeparatorHovered,
-			new(SemanticMeaning.Information, VisualRole.Widget, ImportanceLevel.Medium, isPrimary: true)); // Sky
+			new(SemanticMeaning.Primary, VisualRole.Surface, ImportanceLevel.High, isPrimary: true)); // Surface2
 		AddColorIfAvailable(colors, theme, ImGuiCol.SeparatorActive,
-			new(SemanticMeaning.CallToAction, VisualRole.Widget, ImportanceLevel.Critical, isPrimary: true)); // Mauve
+			new(SemanticMeaning.Secondary, VisualRole.Surface, ImportanceLevel.High, isPrimary: true)); // Peach
 
-		// Tabs (using actual Catppuccin specs)
+		// Tabs (using structural colors only)
 		AddColorIfAvailable(colors, theme, ImGuiCol.Tab,
-			new(SemanticMeaning.Primary, VisualRole.Surface, ImportanceLevel.Low, isPrimary: true)); // Surface0
+			new(SemanticMeaning.Primary, VisualRole.Widget, ImportanceLevel.Low, isPrimary: true)); // Surface0
 		AddColorIfAvailable(colors, theme, ImGuiCol.TabHovered,
-			new(SemanticMeaning.Information, VisualRole.Widget, ImportanceLevel.Medium, isPrimary: true)); // Sky
+			new(SemanticMeaning.Primary, VisualRole.Widget, ImportanceLevel.Medium, isPrimary: true)); // Surface1
+		AddColorIfAvailable(colors, theme, ImGuiCol.TabSelected,
+			new(SemanticMeaning.Primary, VisualRole.Widget, ImportanceLevel.High, isPrimary: true)); // Surface1
 
-		// Plot colors for data visualization
+		// Plot colors (using structural colors only)
 		AddColorIfAvailable(colors, theme, ImGuiCol.PlotLines,
-			new(SemanticMeaning.Information, VisualRole.Widget, ImportanceLevel.High, isPrimary: true));
+			new(SemanticMeaning.Secondary, VisualRole.Widget, ImportanceLevel.Medium, isPrimary: true));
 		AddColorIfAvailable(colors, theme, ImGuiCol.PlotLinesHovered,
-			new(SemanticMeaning.Information, VisualRole.Widget, ImportanceLevel.High, isPrimary: true), 1.2f);
+			new(SemanticMeaning.Secondary, VisualRole.Widget, ImportanceLevel.Medium, isPrimary: true), 1.2f);
 		AddColorIfAvailable(colors, theme, ImGuiCol.PlotHistogram,
-			new(SemanticMeaning.Success, VisualRole.Widget, ImportanceLevel.High, isPrimary: true));
+			new(SemanticMeaning.Secondary, VisualRole.Widget, ImportanceLevel.High, isPrimary: false));
 		AddColorIfAvailable(colors, theme, ImGuiCol.PlotHistogramHovered,
-			new(SemanticMeaning.Success, VisualRole.Widget, ImportanceLevel.High, isPrimary: true), 1.2f);
+			new(SemanticMeaning.Secondary, VisualRole.Widget, ImportanceLevel.High, isPrimary: false), 1.2f);
 
-		// Table colors (using actual Catppuccin specs)
+		// Table colors (using structural colors only)
 		AddColorIfAvailable(colors, theme, ImGuiCol.TableHeaderBg,
-			new(SemanticMeaning.Information, VisualRole.Widget, ImportanceLevel.Medium, isPrimary: true)); // Sky
+			new(SemanticMeaning.Primary, VisualRole.Widget, ImportanceLevel.Medium, isPrimary: true)); // Surface1
 		AddColorIfAvailable(colors, theme, ImGuiCol.TableBorderStrong,
 			new(SemanticMeaning.Primary, VisualRole.Surface, ImportanceLevel.High, isPrimary: true)); // Surface2
 		AddColorIfAvailable(colors, theme, ImGuiCol.TableBorderLight,
@@ -124,17 +126,17 @@ public sealed class ImGuiPaletteMapper : IPaletteMapper<ImGuiCol, Vector4>
 		AddColorIfAvailable(colors, theme, ImGuiCol.TableRowBgAlt,
 			new(SemanticMeaning.Primary, VisualRole.Background, ImportanceLevel.Low, isPrimary: false), alpha: 0.2f); // Crust
 
-		// Text selection
+		// Text selection (using structural colors only)
 		AddColorIfAvailable(colors, theme, ImGuiCol.TextSelectedBg,
-			new(SemanticMeaning.CallToAction, VisualRole.Surface, ImportanceLevel.Medium, isPrimary: true), alpha: 0.4f);
+			new(SemanticMeaning.Secondary, VisualRole.Surface, ImportanceLevel.Medium, isPrimary: true), alpha: 0.4f);
 
-		// Title bars (using actual Catppuccin specs)
+		// Title bars (using structural colors only)
 		AddColorIfAvailable(colors, theme, ImGuiCol.TitleBg,
-			new(SemanticMeaning.Primary, VisualRole.Surface, ImportanceLevel.Low, isPrimary: true)); // Surface0
+			new(SemanticMeaning.Primary, VisualRole.Surface, ImportanceLevel.Medium, isPrimary: true)); // Surface0
 		AddColorIfAvailable(colors, theme, ImGuiCol.TitleBgActive,
-			new(SemanticMeaning.Information, VisualRole.Widget, ImportanceLevel.Medium, isPrimary: true)); // Sky
+			new(SemanticMeaning.Primary, VisualRole.Widget, ImportanceLevel.Medium, isPrimary: true)); // Surface1
 		AddColorIfAvailable(colors, theme, ImGuiCol.TitleBgCollapsed,
-			new(SemanticMeaning.Primary, VisualRole.Background, ImportanceLevel.Low, isPrimary: false)); // Crust
+			new(SemanticMeaning.Primary, VisualRole.Surface, ImportanceLevel.Low, isPrimary: false)); // Crust
 
 		// Borders (using actual Catppuccin specs)
 		AddColorIfAvailable(colors, theme, ImGuiCol.Border,
