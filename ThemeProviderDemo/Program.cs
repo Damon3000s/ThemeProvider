@@ -10,62 +10,17 @@ using Hexa.NET.ImGui;
 using ktsu.ImGuiApp;
 using ktsu.ThemeProvider;
 using ktsu.ThemeProvider.ImGui;
-using ktsu.ThemeProvider.Themes.Catppuccin;
-using ktsu.ThemeProvider.Themes.Nord;
-using ktsu.ThemeProvider.Themes.Monokai;
-using ktsu.ThemeProvider.Themes.TokyoNight;
-using ktsu.ThemeProvider.Themes.Gruvbox;
-using ktsu.ThemeProvider.Themes.Dracula;
-using ktsu.ThemeProvider.Themes.OneDark;
-using ktsu.ThemeProvider.Themes.VSCode;
-using ktsu.ThemeProvider.Themes.Nightfly;
-using ktsu.ThemeProvider.Themes.Everforest;
+using static ktsu.ThemeProvider.ThemeRegistry;
 
 internal static class Program
 {
 	private static ISemanticTheme theme = null!;
 	private static ImGuiPaletteMapper imguiMapper = null!;
 
-	// Theme selection
-	private static readonly ISemanticTheme[] availableThemes = [
-		// Catppuccin variants
-		new Latte(),
-		new Frappe(),
-		new Macchiato(),
-		new Mocha(),
-		// Other popular themes
-		new Nord(),
-		new Monokai(),
-		new TokyoNight(),
-		new GruvboxDark(),
-		new GruvboxLight(),
-		new Dracula(),
-		new OneDark(),
-		new VSCodeDark(),
-		new VSCodeLight(),
-		new Nightfly(),
-		new EverforestDark(),
-		new EverforestLight(),
-	];
-
-	private static readonly string[] themeNames = [
-		"Catppuccin Latte (Light)",
-		"Catppuccin Frappe (Dark)",
-		"Catppuccin Macchiato (Dark)",
-		"Catppuccin Mocha (Darkest)",
-		"Nord (Dark)",
-		"Monokai (Dark)",
-		"Tokyo Night (Dark)",
-		"Gruvbox Dark",
-		"Gruvbox Light",
-		"Dracula (Dark)",
-		"One Dark",
-		"VSCode Dark",
-		"VSCode Light",
-		"Nightfly (Dark)",
-		"Everforest Dark",
-		"Everforest Light",
-	];
+	// Theme selection using the centralized registry
+	private static readonly ThemeInfo[] availableThemes = [.. AllThemes];
+	private static readonly string[] themeNames = [.. AllThemes.Select(t =>
+		$"{t.Name} ({(t.IsDark ? "Dark" : "Light")})")];
 
 	private static int selectedThemeIndex;
 
@@ -99,7 +54,7 @@ internal static class Program
 	private static void OnStart()
 	{
 		selectedThemeIndex = 3; // Start with Catppuccin Mocha
-		theme = availableThemes[selectedThemeIndex];
+		theme = availableThemes[selectedThemeIndex].CreateInstance();
 		imguiMapper = new ImGuiPaletteMapper();
 
 		// Initialize with theme's primary color
@@ -117,6 +72,12 @@ internal static class Program
 
 		if (ImGui.BeginTabBar("DemoTabs"))
 		{
+			if (ImGui.BeginTabItem("Theme Browser"))
+			{
+				RenderThemeBrowser();
+				ImGui.EndTabItem();
+			}
+
 			if (ImGui.BeginTabItem("Theme Overview"))
 			{
 				RenderThemeOverview();
@@ -170,13 +131,89 @@ internal static class Program
 		}
 	}
 
+	private static void RenderThemeBrowser()
+	{
+		ImGui.TextUnformatted("Browse all available themes from the ThemeRegistry:");
+		ImGui.Separator();
+
+		// Show theme statistics
+		ImGui.TextUnformatted($"Total Themes: {AllThemes.Length}");
+		ImGui.TextUnformatted($"Theme Families: {Families.Length}");
+		ImGui.TextUnformatted($"Dark Themes: {DarkThemes.Length}");
+		ImGui.TextUnformatted($"Light Themes: {LightThemes.Length}");
+
+		ImGui.Separator();
+
+		// Browse by family
+		foreach (string family in Families)
+		{
+			ImmutableArray<ThemeInfo> themesInFamily = GetThemesInFamily(family);
+
+			if (ImGui.CollapsingHeader($"{family} ({themesInFamily.Length} variants)", ImGuiTreeNodeFlags.DefaultOpen))
+			{
+				ImGui.Indent();
+
+				// Show themes in a grid
+				if (ImGui.BeginTable($"Family_{family}", 4, ImGuiTableFlags.Borders | ImGuiTableFlags.RowBg))
+				{
+					ImGui.TableSetupColumn("Theme");
+					ImGui.TableSetupColumn("Type");
+					ImGui.TableSetupColumn("Description");
+					ImGui.TableSetupColumn("Action");
+					ImGui.TableHeadersRow();
+
+					for (int i = 0; i < themesInFamily.Length; i++)
+					{
+						ThemeInfo themeInfo = themesInFamily[i];
+						ImGui.TableNextRow();
+
+						ImGui.TableSetColumnIndex(0);
+						ImGui.TextUnformatted(themeInfo.Name);
+
+						ImGui.TableSetColumnIndex(1);
+						ImGui.TextColored(themeInfo.IsDark ? new Vector4(0.8f, 0.8f, 1.0f, 1.0f) : new Vector4(1.0f, 1.0f, 0.8f, 1.0f),
+							themeInfo.IsDark ? "Dark" : "Light");
+
+						ImGui.TableSetColumnIndex(2);
+						ImGui.TextWrapped(themeInfo.Description);
+
+						ImGui.TableSetColumnIndex(3);
+						if (ImGui.Button($"Preview##{family}_{i}"))
+						{
+							// Find this theme in the main array and select it
+							for (int j = 0; j < availableThemes.Length; j++)
+							{
+								if (availableThemes[j].Name == themeInfo.Name)
+								{
+									selectedThemeIndex = j;
+									theme = themeInfo.CreateInstance();
+									cachedMeaning = null;
+									cachedMapping = null;
+									break;
+								}
+							}
+						}
+					}
+
+					ImGui.EndTable();
+				}
+
+				ImGui.Unindent();
+			}
+		}
+
+		ImGui.Separator();
+		ImGui.TextUnformatted("Usage Example:");
+		ImGui.Text("// Get all themes\nvar allThemes = ThemeRegistry.AllThemes;\n\n// Get themes by family\nvar gruvboxThemes = ThemeRegistry.GetThemesInFamily(\"Gruvbox\");\n\n// Find specific theme\nvar theme = ThemeRegistry.FindTheme(\"Catppuccin Mocha\");\nvar instance = theme?.CreateInstance();");
+	}
+
 	private static void RenderThemeOverview()
 	{
 		// Theme selection
 		ImGui.TextUnformatted("Select Theme:");
 		if (ImGui.Combo("##ThemeVariant", ref selectedThemeIndex, themeNames, themeNames.Length))
 		{
-			theme = availableThemes[selectedThemeIndex];
+			theme = availableThemes[selectedThemeIndex].CreateInstance();
 			// Clear cache when theme changes
 			cachedMeaning = null;
 			cachedMapping = null;

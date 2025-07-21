@@ -44,13 +44,13 @@ public sealed class ImGuiPaletteMapper : IPaletteMapper<ImGuiCol, Vector4>
 			{ ImGuiCol.ScrollbarGrabActive, new(SemanticMeaning.Neutral, Priority.High)},
 
 			// Primary elements now use more spread out priorities to maximize contrast within the 50-90% range
-			{ ImGuiCol.Button, new(SemanticMeaning.Primary, Priority.Low)},
-			{ ImGuiCol.ButtonHovered, new(SemanticMeaning.Primary, Priority.MediumHigh)},
-			{ ImGuiCol.ButtonActive, new(SemanticMeaning.Primary, Priority.VeryHigh)},
+			{ ImGuiCol.Button, new(SemanticMeaning.Primary, Priority.Medium)},
+			{ ImGuiCol.ButtonHovered, new(SemanticMeaning.Alternate, Priority.Medium)},
+			{ ImGuiCol.ButtonActive, new(SemanticMeaning.Alternate, Priority.VeryHigh)},
 
-			{ ImGuiCol.Header, new(SemanticMeaning.Primary, Priority.Low)},
-			{ ImGuiCol.HeaderHovered, new(SemanticMeaning.Primary, Priority.MediumHigh)},
-			{ ImGuiCol.HeaderActive, new(SemanticMeaning.Primary, Priority.VeryHigh)},
+			{ ImGuiCol.Header, new(SemanticMeaning.Primary, Priority.Medium)},
+			{ ImGuiCol.HeaderHovered, new(SemanticMeaning.Alternate, Priority.Medium)},
+			{ ImGuiCol.HeaderActive, new(SemanticMeaning.Alternate, Priority.VeryHigh)},
 
 			{ ImGuiCol.CheckMark, new(SemanticMeaning.Primary, Priority.High)},
 
@@ -67,18 +67,18 @@ public sealed class ImGuiPaletteMapper : IPaletteMapper<ImGuiCol, Vector4>
 			{ ImGuiCol.SeparatorHovered, new(SemanticMeaning.Neutral, Priority.High)},
 			{ ImGuiCol.SeparatorActive, new(SemanticMeaning.Neutral, Priority.VeryHigh)},
 
-			{ ImGuiCol.Tab, new(SemanticMeaning.Neutral, Priority.MediumLow)},
+			{ ImGuiCol.Tab, new(SemanticMeaning.Neutral, Priority.Medium)},
 			{ ImGuiCol.TabSelected, new(SemanticMeaning.Primary, Priority.Medium)},
-			{ ImGuiCol.TabHovered, new(SemanticMeaning.Primary, Priority.MediumHigh)},
+			{ ImGuiCol.TabHovered, new(SemanticMeaning.Alternate, Priority.Medium)},
 
 			// Alternate elements spread across the full 50-90% range for better contrast
-			{ ImGuiCol.PlotLines, new(SemanticMeaning.Alternate, Priority.VeryLow)},
-			{ ImGuiCol.PlotLinesHovered, new(SemanticMeaning.Alternate, Priority.Medium)},
+			{ ImGuiCol.PlotLines, new(SemanticMeaning.Alternate, Priority.Medium)},
+			{ ImGuiCol.PlotLinesHovered, new(SemanticMeaning.Alternate, Priority.High)},
 
-			{ ImGuiCol.PlotHistogram, new(SemanticMeaning.Alternate, Priority.Low)},
-			{ ImGuiCol.PlotHistogramHovered, new(SemanticMeaning.Alternate, Priority.MediumHigh)},
+			{ ImGuiCol.PlotHistogram, new(SemanticMeaning.Alternate, Priority.Medium)},
+			{ ImGuiCol.PlotHistogramHovered, new(SemanticMeaning.Alternate, Priority.High)},
 
-			{ ImGuiCol.TableHeaderBg, new(SemanticMeaning.Primary, Priority.MediumLow)},
+			{ ImGuiCol.TableHeaderBg, new(SemanticMeaning.Primary, Priority.Medium)},
 			{ ImGuiCol.TableBorderStrong, new(SemanticMeaning.Neutral, Priority.Medium)},
 			{ ImGuiCol.TableBorderLight, new(SemanticMeaning.Neutral, Priority.Medium)},
 			{ ImGuiCol.TableRowBg, new(SemanticMeaning.Neutral, Priority.Low) },
