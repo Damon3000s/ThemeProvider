@@ -29,6 +29,10 @@ internal static class Program
 	private static bool checkboxValue;
 	private static string textValue = "Text Input";
 
+	// Cache for complete semantic mappings
+	private static SemanticMeaning? cachedMeaning;
+	private static ImmutableDictionary<SemanticColorRequest, PerceptualColor>? cachedMapping;
+
 	private static void Main()
 	{
 		ImGuiApp.Start(new()
@@ -256,6 +260,9 @@ internal static class Program
 				// Show what each priority maps to
 				ImGui.TextUnformatted("Priority → Mapped Lightness (Interpolation/Extrapolation):");
 
+				// Get complete mapping for this semantic meaning (more efficient than individual requests)
+				ImmutableDictionary<SemanticColorRequest, PerceptualColor> completeMapping = GetCompleteMappingForSemantic(currentMeaning);
+
 				if (ImGui.BeginTable("PriorityMappingTable", 5, ImGuiTableFlags.Borders | ImGuiTableFlags.RowBg))
 				{
 					ImGui.TableSetupColumn("Priority");
@@ -268,9 +275,7 @@ internal static class Program
 					foreach (Priority priority in allPriorities)
 					{
 						SemanticColorRequest request = new(currentMeaning, priority);
-						PerceptualColor color = GetColorFromTheme(request);
-
-						if (color != default)
+						if (completeMapping.TryGetValue(request, out PerceptualColor color))
 						{
 							ImGui.TableNextRow();
 
@@ -624,10 +629,30 @@ internal static class Program
 
 	private static PerceptualColor GetColorFromTheme(SemanticColorRequest request)
 	{
-		List<SemanticColorRequest> requests = [request];
-		ImmutableDictionary<SemanticColorRequest, PerceptualColor> mappedColors = SemanticColorMapper.MapColors(requests, theme);
+		// Check if we have cached mapping for this semantic meaning
+		if (cachedMeaning != request.Meaning || cachedMapping == null)
+		{
+			// Generate complete mapping for all priorities of this semantic meaning
+			List<SemanticColorRequest> requests = [request];
+			cachedMapping = SemanticColorMapper.MapColors(requests, theme);
+			cachedMeaning = request.Meaning;
+		}
 
-		return mappedColors.TryGetValue(request, out PerceptualColor color) ? color : default;
+		return cachedMapping.TryGetValue(request, out PerceptualColor color) ? color : default;
+	}
+
+	private static ImmutableDictionary<SemanticColorRequest, PerceptualColor> GetCompleteMappingForSemantic(SemanticMeaning meaning)
+	{
+		// Check if we have cached mapping for this semantic meaning
+		if (cachedMeaning != meaning || cachedMapping == null)
+		{
+			// Generate complete mapping for all priorities of this semantic meaning
+			List<SemanticColorRequest> requests = [new(meaning, Priority.Medium)]; // Just need one request to trigger full mapping
+			cachedMapping = SemanticColorMapper.MapColors(requests, theme);
+			cachedMeaning = meaning;
+		}
+
+		return cachedMapping;
 	}
 
 	private static Vector4 ToImVec4(RgbColor color, float alpha = 1.0f) => new(color.R, color.G, color.B, alpha);

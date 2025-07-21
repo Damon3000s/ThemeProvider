@@ -17,11 +17,12 @@ public sealed class SemanticColorMapper
 {
 	/// <summary>
 	/// Maps a collection of semantic color requests to actual colors using the provided theme.
+	/// Returns a complete mapping for all priority levels of the semantic meanings that were requested.
 	/// Uses a global lightness range divided by priority levels to ensure consistent visual hierarchy.
 	/// </summary>
 	/// <param name="requests">The collection of semantic color requests to map</param>
 	/// <param name="theme">The semantic theme providing available colors for each meaning</param>
-	/// <returns>A dictionary mapping each request to its assigned color</returns>
+	/// <returns>A dictionary mapping each request to its assigned color, including all priority levels for the requested semantic meanings</returns>
 	public static ImmutableDictionary<SemanticColorRequest, PerceptualColor> MapColors(
 		IEnumerable<SemanticColorRequest> requests,
 		ISemanticTheme theme)
@@ -38,35 +39,42 @@ public sealed class SemanticColorMapper
 		// Calculate the global lightness range across all semantic meanings
 		(float minLightness, float maxLightness) = CalculateGlobalLightnessRange(theme);
 
-		// Get all unique priority levels from the requests
-		List<Priority> uniquePriorities = [.. requestsList
-			.Select(r => r.Priority)
-			.Distinct()
-			.OrderBy(p => p)];
+		// Always use ALL possible priority levels for consistent mapping
+		Priority[] allPriorities = Enum.GetValues<Priority>();
+		List<Priority> priorityLevels = [.. allPriorities.OrderBy(p => p)];
 
 		// Create a mapping of priority to target lightness
 		Dictionary<Priority, float> priorityToLightness = CalculatePriorityLightnessMapping(
-			uniquePriorities, minLightness, maxLightness, theme.IsDarkTheme);
+			priorityLevels, minLightness, maxLightness, theme.IsDarkTheme);
 
 		Dictionary<SemanticColorRequest, PerceptualColor> result = [];
 
-		// Process each request
-		foreach (SemanticColorRequest request in requestsList)
+		// Get all unique semantic meanings from the requests
+		HashSet<SemanticMeaning> requestedMeanings = [.. requestsList.Select(r => r.Meaning)];
+
+		// Generate complete mappings for all priority levels of each requested semantic meaning
+		foreach (SemanticMeaning meaning in requestedMeanings)
 		{
 			// Get available colors for this semantic meaning
-			if (!theme.SemanticMapping.TryGetValue(request.Meaning, out Collection<PerceptualColor>? availableColors) ||
+			if (!theme.SemanticMapping.TryGetValue(meaning, out Collection<PerceptualColor>? availableColors) ||
 				availableColors.Count == 0)
 			{
 				continue; // Skip if no colors available for this meaning
 			}
 
-			// Get the target lightness for this priority
-			float targetLightness = priorityToLightness[request.Priority];
+			// Generate colors for ALL priority levels for this semantic meaning
+			foreach (Priority priority in allPriorities)
+			{
+				SemanticColorRequest fullRequest = new(meaning, priority);
 
-			// Find the closest color by lightness within this semantic meaning
-			PerceptualColor bestColor = InterpolateToTargetLightness(availableColors, targetLightness);
+				// Get the target lightness for this priority
+				float targetLightness = priorityToLightness[priority];
 
-			result[request] = bestColor;
+				// Generate the color using interpolation/extrapolation
+				PerceptualColor color = InterpolateToTargetLightness(availableColors, targetLightness);
+
+				result[fullRequest] = color;
+			}
 		}
 
 		return result.ToImmutableDictionary();
