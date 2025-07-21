@@ -19,26 +19,21 @@ public readonly record struct SemanticColorSpec
 	/// <summary>The importance level determining saturation</summary>
 	public ImportanceLevel Importance { get; init; }
 
-	/// <summary>Whether this is primary or secondary within its category</summary>
-	public bool IsPrimary { get; init; } = true;
-
 	/// <summary>
 	/// Creates a new semantic color specification.
 	/// </summary>
 	/// <param name="meaning">The semantic meaning determining hue</param>
 	/// <param name="role">The visual role determining luminance/elevation</param>
 	/// <param name="importance">The importance level determining saturation</param>
-	/// <param name="isPrimary">Whether this is primary or secondary within its category</param>
-	public SemanticColorSpec(SemanticMeaning meaning, VisualRole role, ImportanceLevel importance = ImportanceLevel.Medium, bool isPrimary = true)
+	public SemanticColorSpec(SemanticMeaning meaning, VisualRole role, ImportanceLevel importance = ImportanceLevel.Medium)
 	{
 		Meaning = meaning;
 		Role = role;
 		Importance = importance;
-		IsPrimary = isPrimary;
 	}
 
 	/// <summary>
 	/// Converts to a readable string representation.
 	/// </summary>
-	public override string ToString() => $"{(IsPrimary ? "Primary" : "Secondary")} {Role} {Meaning} ({Importance})";
+	public override string ToString() => $"{Role} {Meaning} ({Importance})";
 }

@@ -78,11 +78,11 @@ public static class CatppuccinMochaSemanticMapping
 	/// <returns>The appropriate background color from the palette.</returns>
 	public static CatppuccinMochaPalette.PaletteColor GetBackgroundColor(SemanticColorSpec spec)
 	{
-		return (spec.Importance, spec.IsPrimary) switch
+		return (spec.Importance, spec.Meaning) switch
 		{
-			(ImportanceLevel.Low, true) => CatppuccinMochaPalette.Base,
-			(ImportanceLevel.Medium, false) => CatppuccinMochaPalette.Mantle,
-			(ImportanceLevel.Low, false) => CatppuccinMochaPalette.Crust,
+			(ImportanceLevel.Low, SemanticMeaning.Primary) => CatppuccinMochaPalette.Base,
+			(ImportanceLevel.Medium, SemanticMeaning.Secondary) => CatppuccinMochaPalette.Mantle,
+			(ImportanceLevel.Low, SemanticMeaning.Secondary) => CatppuccinMochaPalette.Crust,
 			_ => CatppuccinMochaPalette.Base
 		};
 	}
@@ -94,14 +94,14 @@ public static class CatppuccinMochaSemanticMapping
 	/// <returns>The appropriate surface color from the palette.</returns>
 	public static CatppuccinMochaPalette.PaletteColor GetSurfaceColor(SemanticColorSpec spec)
 	{
-		return (spec.Importance, spec.IsPrimary) switch
+		return (spec.Importance, spec.Meaning) switch
 		{
-			(ImportanceLevel.Low, true) => CatppuccinMochaPalette.Surface0,
-			(ImportanceLevel.Medium, true) => CatppuccinMochaPalette.Surface1,
-			(ImportanceLevel.High, true) => CatppuccinMochaPalette.Surface2,
-			(ImportanceLevel.Low, false) => CatppuccinMochaPalette.Overlay0,
-			(ImportanceLevel.Medium, false) => CatppuccinMochaPalette.Overlay1,
-			(ImportanceLevel.High, false) => CatppuccinMochaPalette.Overlay2,
+			(ImportanceLevel.Low, SemanticMeaning.Primary) => CatppuccinMochaPalette.Surface0,
+			(ImportanceLevel.Medium, SemanticMeaning.Primary) => CatppuccinMochaPalette.Surface1,
+			(ImportanceLevel.High, SemanticMeaning.Primary) => CatppuccinMochaPalette.Surface2,
+			(ImportanceLevel.Low, SemanticMeaning.Secondary) => CatppuccinMochaPalette.Overlay0,
+			(ImportanceLevel.Medium, SemanticMeaning.Secondary) => CatppuccinMochaPalette.Overlay1,
+			(ImportanceLevel.High, SemanticMeaning.Secondary) => CatppuccinMochaPalette.Overlay2,
 			_ => CatppuccinMochaPalette.Surface0
 		};
 	}

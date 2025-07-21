@@ -43,7 +43,7 @@ public sealed class SemanticColorGenerator(bool isDarkTheme, IReadOnlyDictionary
 	public RgbColor GenerateColor(SemanticColorSpec spec)
 	{
 		float hue = GetHueForMeaning(spec.Meaning);
-		float lightness = GetLightnessForRole(spec.Role, spec.IsPrimary);
+		float lightness = GetLightnessForRole(spec.Role, spec.Meaning == SemanticMeaning.Primary);
 		float chroma = GetChromaForImportance(spec.Importance);
 
 		// Create in Oklab space for perceptual uniformity
@@ -108,36 +108,36 @@ public sealed class SemanticColorGenerator(bool isDarkTheme, IReadOnlyDictionary
 		// Define comprehensive set of UI color specifications
 		List<SemanticColorSpec> specs = [
 			// Backgrounds
-			new(SemanticMeaning.Primary, VisualRole.Background, ImportanceLevel.Low, true),
+			new(SemanticMeaning.Primary, VisualRole.Background, ImportanceLevel.Low),
 
 			// Surfaces
-			new(SemanticMeaning.Primary, VisualRole.Surface, ImportanceLevel.Low, true),
-			new(SemanticMeaning.Primary, VisualRole.Surface, ImportanceLevel.Medium, true),
-			new(SemanticMeaning.Primary, VisualRole.Surface, ImportanceLevel.High, true),
-			new(SemanticMeaning.Secondary, VisualRole.Surface, ImportanceLevel.Medium, true),
+			new(SemanticMeaning.Primary, VisualRole.Surface, ImportanceLevel.Low),
+			new(SemanticMeaning.Primary, VisualRole.Surface, ImportanceLevel.Medium),
+			new(SemanticMeaning.Primary, VisualRole.Surface, ImportanceLevel.High),
+			new(SemanticMeaning.Secondary, VisualRole.Surface, ImportanceLevel.Medium),
 
 			// Text hierarchy
-			new(SemanticMeaning.Primary, VisualRole.Text, ImportanceLevel.Critical, true),  // Primary text
-			new(SemanticMeaning.Primary, VisualRole.Text, ImportanceLevel.Medium, false),   // Secondary text
+			new(SemanticMeaning.Primary, VisualRole.Text, ImportanceLevel.Critical),  // Primary text
+			new(SemanticMeaning.Secondary, VisualRole.Text, ImportanceLevel.Medium),   // Secondary text
 
 			// Semantic text colors
-			new(SemanticMeaning.Success, VisualRole.Text, ImportanceLevel.High, true),
-			new(SemanticMeaning.Warning, VisualRole.Text, ImportanceLevel.High, true),
-			new(SemanticMeaning.Error, VisualRole.Text, ImportanceLevel.Critical, true),
-			new(SemanticMeaning.CallToAction, VisualRole.Text, ImportanceLevel.High, true),
-			new(SemanticMeaning.Information, VisualRole.Text, ImportanceLevel.Medium, true),
+			new(SemanticMeaning.Success, VisualRole.Text, ImportanceLevel.High),
+			new(SemanticMeaning.Warning, VisualRole.Text, ImportanceLevel.High),
+			new(SemanticMeaning.Error, VisualRole.Text, ImportanceLevel.Critical),
+			new(SemanticMeaning.CallToAction, VisualRole.Text, ImportanceLevel.High),
+			new(SemanticMeaning.Information, VisualRole.Text, ImportanceLevel.Medium),
 
 			// Widget/accent colors
-			new(SemanticMeaning.CallToAction, VisualRole.Widget, ImportanceLevel.Critical, true), // Primary button
-			new(SemanticMeaning.Primary, VisualRole.Widget, ImportanceLevel.Medium, false),        // Secondary button
-			new(SemanticMeaning.Success, VisualRole.Widget, ImportanceLevel.High, true),
-			new(SemanticMeaning.Warning, VisualRole.Widget, ImportanceLevel.High, true),
-			new(SemanticMeaning.Error, VisualRole.Widget, ImportanceLevel.Critical, true),
-			new(SemanticMeaning.Information, VisualRole.Widget, ImportanceLevel.Medium, true),
+			new(SemanticMeaning.CallToAction, VisualRole.Widget, ImportanceLevel.Critical), // Primary button
+			new(SemanticMeaning.Secondary, VisualRole.Widget, ImportanceLevel.Medium),        // Secondary button
+			new(SemanticMeaning.Success, VisualRole.Widget, ImportanceLevel.High),
+			new(SemanticMeaning.Warning, VisualRole.Widget, ImportanceLevel.High),
+			new(SemanticMeaning.Error, VisualRole.Widget, ImportanceLevel.Critical),
+			new(SemanticMeaning.Information, VisualRole.Widget, ImportanceLevel.Medium),
 
 			// Debug/development colors
-			new(SemanticMeaning.Debug, VisualRole.Text, ImportanceLevel.Low, true),
-			new(SemanticMeaning.Debug, VisualRole.Widget, ImportanceLevel.Low, true)
+			new(SemanticMeaning.Debug, VisualRole.Text, ImportanceLevel.Low),
+			new(SemanticMeaning.Debug, VisualRole.Widget, ImportanceLevel.Low)
 		];
 
 		return generator.GenerateTheme(

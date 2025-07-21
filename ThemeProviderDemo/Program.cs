@@ -24,7 +24,6 @@ internal static class Program
 	private static int selectedSemanticMeaning = (int)SemanticMeaning.Primary;
 	private static int selectedVisualRole = (int)VisualRole.Surface;
 	private static int selectedImportance = (int)ImportanceLevel.Medium;
-	private static bool isPrimary = true;
 	private static Vector3 selectedColorVec = Vector3.Zero;
 	private static Vector3 backgroundColorVec = new(0.1f, 0.1f, 0.1f);
 	private static bool isLargeText;
@@ -61,7 +60,7 @@ internal static class Program
 		imguiMapper = new ImGuiPaletteMapper();
 
 		// Initialize with theme's primary text color
-		SemanticColorSpec textSpec = new(SemanticMeaning.Primary, VisualRole.Text, ImportanceLevel.Critical, isPrimary: true);
+		SemanticColorSpec textSpec = new(SemanticMeaning.Primary, VisualRole.Text, ImportanceLevel.Critical);
 		if (theme.TryGetColor(textSpec, out ColorProperties textColor))
 		{
 			selectedColorVec = new Vector3(textColor.RgbValue.R, textColor.RgbValue.G, textColor.RgbValue.B);
@@ -205,7 +204,7 @@ internal static class Program
 						ImGui.TableSetColumnIndex(baseColumnIndex + 1);
 						ImGui.TextUnformatted($"{spec.Meaning}");
 						ImGui.TextUnformatted($"{spec.Importance}");
-						ImGui.TextUnformatted($"{(spec.IsPrimary ? "Primary" : "Secondary")}");
+						ImGui.TextUnformatted($"{(spec.Meaning == SemanticMeaning.Primary ? "Primary" : "Secondary")}");
 
 						itemCount++;
 					}
@@ -233,14 +232,11 @@ internal static class Program
 		string[] importanceNames = Enum.GetNames<ImportanceLevel>();
 		ImGui.Combo("Importance Level", ref selectedImportance, importanceNames, importanceNames.Length);
 
-		ImGui.Checkbox("Primary (vs Secondary)", ref isPrimary);
-
 		// Build the current spec
 		SemanticColorSpec currentSpec = new(
 			(SemanticMeaning)selectedSemanticMeaning,
 			(VisualRole)selectedVisualRole,
-			(ImportanceLevel)selectedImportance,
-			isPrimary
+			(ImportanceLevel)selectedImportance
 		);
 
 		ImGui.Separator();
@@ -333,14 +329,14 @@ internal static class Program
 	private static void GenerateSemanticPalette()
 	{
 		// Get base background color for contrast calculations
-		SemanticColorSpec baseSpec = new(SemanticMeaning.Primary, VisualRole.Background, ImportanceLevel.Low, isPrimary: true);
+		SemanticColorSpec baseSpec = new(SemanticMeaning.Primary, VisualRole.Background, ImportanceLevel.Low);
 		ColorProperties baseColor = theme.GetColor(baseSpec);
 
 		// Create a semantic graph with various color requests
 		SemanticColorGraph graph = SemanticColorGraph.CreateBuilder()
 			.AddRequest(new SemanticColorRequest
 			{
-				PrimarySpec = new(SemanticMeaning.CallToAction, VisualRole.Widget, ImportanceLevel.Critical, isPrimary: true),
+				PrimarySpec = new(SemanticMeaning.CallToAction, VisualRole.Widget, ImportanceLevel.Critical),
 				DesiredTemperature = desiredTemperature,
 				DesiredEnergy = desiredEnergy,
 				DesiredFormality = desiredFormality,
@@ -350,7 +346,7 @@ internal static class Program
 			})
 			.AddRequest(new SemanticColorRequest
 			{
-				PrimarySpec = new(SemanticMeaning.Success, VisualRole.Text, ImportanceLevel.High, isPrimary: true),
+				PrimarySpec = new(SemanticMeaning.Success, VisualRole.Text, ImportanceLevel.High),
 				DesiredTemperature = desiredTemperature * 0.5f,
 				DesiredEnergy = desiredEnergy,
 				DesiredFormality = desiredFormality,
@@ -360,7 +356,7 @@ internal static class Program
 			})
 			.AddRequest(new SemanticColorRequest
 			{
-				PrimarySpec = new(SemanticMeaning.Warning, VisualRole.Widget, ImportanceLevel.High, isPrimary: true),
+				PrimarySpec = new(SemanticMeaning.Warning, VisualRole.Widget, ImportanceLevel.High),
 				DesiredTemperature = Math.Max(0.0f, desiredTemperature),
 				DesiredEnergy = Math.Max(0.6f, desiredEnergy),
 				DesiredFormality = desiredFormality,
@@ -370,7 +366,7 @@ internal static class Program
 			})
 			.AddRequest(new SemanticColorRequest
 			{
-				PrimarySpec = new(SemanticMeaning.Error, VisualRole.Text, ImportanceLevel.Critical, isPrimary: true),
+				PrimarySpec = new(SemanticMeaning.Error, VisualRole.Text, ImportanceLevel.Critical),
 				DesiredTemperature = Math.Max(0.2f, desiredTemperature),
 				DesiredEnergy = Math.Max(0.7f, desiredEnergy),
 				DesiredFormality = desiredFormality,
@@ -380,7 +376,7 @@ internal static class Program
 			})
 			.AddRequest(new SemanticColorRequest
 			{
-				PrimarySpec = new(SemanticMeaning.Information, VisualRole.Surface, ImportanceLevel.Medium, isPrimary: true),
+				PrimarySpec = new(SemanticMeaning.Information, VisualRole.Surface, ImportanceLevel.Medium),
 				DesiredTemperature = Math.Min(0.0f, desiredTemperature),
 				DesiredEnergy = desiredEnergy * 0.8f,
 				DesiredFormality = desiredFormality,
@@ -705,3 +701,4 @@ internal static class Program
 		return whiteContrast > blackContrast ? white : black;
 	}
 }
+
