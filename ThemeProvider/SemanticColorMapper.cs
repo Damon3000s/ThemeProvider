@@ -36,16 +36,12 @@ public sealed class SemanticColorMapper
 			return ImmutableDictionary<SemanticColorRequest, PerceptualColor>.Empty;
 		}
 
-		// Calculate the global lightness range across all semantic meanings
-		(float minLightness, float maxLightness) = CalculateGlobalLightnessRange(theme);
+		// Calculate the neutral lightness range for use by all semantics
+		(float neutralMinLightness, float neutralMaxLightness) = CalculateNeutralLightnessRange(theme);
 
 		// Always use ALL possible priority levels for consistent mapping
 		Priority[] allPriorities = Enum.GetValues<Priority>();
 		List<Priority> priorityLevels = [.. allPriorities.OrderBy(p => p)];
-
-		// Create a mapping of priority to target lightness
-		Dictionary<Priority, float> priorityToLightness = CalculatePriorityLightnessMapping(
-			priorityLevels, minLightness, maxLightness, theme.IsDarkTheme);
 
 		Dictionary<SemanticColorRequest, PerceptualColor> result = [];
 
@@ -67,8 +63,9 @@ public sealed class SemanticColorMapper
 			{
 				SemanticColorRequest fullRequest = new(meaning, priority);
 
-				// Get the target lightness for this priority
-				float targetLightness = priorityToLightness[priority];
+				// Calculate target lightness based on whether this is neutral or non-neutral
+				float targetLightness = CalculateTargetLightnessForSemantic(
+					priority, meaning, neutralMinLightness, neutralMaxLightness, theme.IsDarkTheme);
 
 				// Generate the color using interpolation/extrapolation
 				PerceptualColor color = InterpolateToTargetLightness(availableColors, targetLightness);
@@ -81,130 +78,106 @@ public sealed class SemanticColorMapper
 	}
 
 	/// <summary>
-	/// Calculates the global lightness range across all colors in all semantic meanings.
+	/// Calculates the lightness range of the neutral semantic meaning.
+	/// This range will be used as the basis for all semantic color mappings.
 	/// </summary>
-	private static (float min, float max) CalculateGlobalLightnessRange(ISemanticTheme theme)
+	private static (float min, float max) CalculateNeutralLightnessRange(ISemanticTheme theme)
 	{
-		float minLightness = float.MaxValue;
-		float maxLightness = float.MinValue;
+		if (theme.SemanticMapping.TryGetValue(SemanticMeaning.Neutral, out Collection<PerceptualColor>? neutralColors) &&
+			neutralColors.Count > 0)
+		{
+			float minLightness = neutralColors.Min(c => c.Lightness);
+			float maxLightness = neutralColors.Max(c => c.Lightness);
+			return (minLightness, maxLightness);
+		}
+
+		// Fallback: if no neutral colors, use global range
+		float globalMin = float.MaxValue;
+		float globalMax = float.MinValue;
 
 		foreach ((SemanticMeaning meaning, Collection<PerceptualColor> colors) in theme.SemanticMapping)
 		{
 			foreach (PerceptualColor color in colors)
 			{
-				if (color.Lightness < minLightness)
+				if (color.Lightness < globalMin)
 				{
-					minLightness = color.Lightness;
+					globalMin = color.Lightness;
 				}
-				if (color.Lightness > maxLightness)
+				if (color.Lightness > globalMax)
 				{
-					maxLightness = color.Lightness;
+					globalMax = color.Lightness;
 				}
 			}
 		}
 
 		// Ensure we have a valid range
-		if (minLightness == float.MaxValue || maxLightness == float.MinValue)
+		if (globalMin == float.MaxValue || globalMax == float.MinValue)
 		{
-			return (0.0f, 1.0f); // Fallback range
+			return (0.0f, 1.0f); // Final fallback range
 		}
 
-		return (minLightness, maxLightness);
+		return (globalMin, globalMax);
 	}
 
 	/// <summary>
-	/// Creates a mapping from priority levels to target lightness values by extending
-	/// the global lightness range to ensure sufficient contrast between priority levels.
+	/// Calculates the target lightness for a specific semantic meaning and priority.
+	/// Neutral semantics use the full neutral range, while non-neutral semantics use 50-90% of it.
 	/// </summary>
-	private static Dictionary<Priority, float> CalculatePriorityLightnessMapping(
-		List<Priority> priorities,
-		float minLightness,
-		float maxLightness,
+	private static float CalculateTargetLightnessForSemantic(
+		Priority priority,
+		SemanticMeaning meaning,
+		float neutralMinLightness,
+		float neutralMaxLightness,
 		bool isDarkTheme)
 	{
-		Dictionary<Priority, float> result = [];
+		// Get all priorities and find the position of the current priority
+		Priority[] allPriorities = Enum.GetValues<Priority>();
+		int priorityIndex = Array.IndexOf(allPriorities, priority);
 
-		if (priorities.Count == 0)
+		if (allPriorities.Length == 1)
 		{
-			return result;
+			float neutralCenter = (neutralMinLightness + neutralMaxLightness) / 2.0f;
+			return meaning == SemanticMeaning.Neutral ? neutralCenter : neutralCenter;
 		}
 
-		if (priorities.Count == 1)
+		// Calculate position in range (0.0 to 1.0)
+		float position = priorityIndex / (float)(allPriorities.Length - 1);
+
+		// Determine the lightness range to use
+		float minLightness, maxLightness;
+		if (meaning == SemanticMeaning.Neutral)
 		{
-			// Single priority gets the middle of the range
-			result[priorities[0]] = (minLightness + maxLightness) / 2.0f;
-			return result;
-		}
-
-		// Define minimum contrast between adjacent priority levels for good visual distinction
-		const float minContrastBetweenPriorities = 0.12f;
-
-		// Calculate required range for all priorities with minimum contrast
-		float requiredRange = (priorities.Count - 1) * minContrastBetweenPriorities;
-		float originalRange = maxLightness - minLightness;
-
-		// Determine the extended range
-		float extendedRange = Math.Max(requiredRange, originalRange);
-
-		// Calculate the center point of the original range
-		float originalCenter = (minLightness + maxLightness) / 2.0f;
-
-		// Calculate extended bounds, ensuring they stay within 0.0-1.0
-		float extendedMinLightness, extendedMaxLightness;
-
-		if (isDarkTheme)
-		{
-			// For dark themes, extend upward (toward lighter) for better visibility progression
-			extendedMinLightness = Math.Max(0.0f, originalCenter - (extendedRange / 2.0f));
-			extendedMaxLightness = Math.Min(1.0f, extendedMinLightness + extendedRange);
-
-			// If we hit the upper bound, adjust the minimum accordingly
-			if (extendedMaxLightness == 1.0f)
-			{
-				extendedMinLightness = Math.Max(0.0f, 1.0f - extendedRange);
-			}
+			// Neutral uses the full neutral range
+			minLightness = neutralMinLightness;
+			maxLightness = neutralMaxLightness;
 		}
 		else
 		{
-			// For light themes, extend downward (toward darker) for better visibility progression
-			extendedMaxLightness = Math.Min(1.0f, originalCenter + (extendedRange / 2.0f));
-			extendedMinLightness = Math.Max(0.0f, extendedMaxLightness - extendedRange);
+			// Non-neutral uses 50-90% of the neutral range
+			float neutralRange = neutralMaxLightness - neutralMinLightness;
+			float rangeStart = neutralMinLightness + (neutralRange * 0.5f); // 50%
+			float rangeEnd = neutralMinLightness + (neutralRange * 0.9f);   // 90%
 
-			// If we hit the lower bound, adjust the maximum accordingly
-			if (extendedMinLightness == 0.0f)
-			{
-				extendedMaxLightness = Math.Min(1.0f, extendedRange);
-			}
+			minLightness = rangeStart;
+			maxLightness = rangeEnd;
 		}
 
-		// Recalculate the actual extended range after bounds checking
-		float finalRange = extendedMaxLightness - extendedMinLightness;
+		float lightnessRange = maxLightness - minLightness;
 
-		// For dark themes, higher priority should be lighter (more visible)
-		// For light themes, higher priority should be darker (more visible)
-		for (int i = 0; i < priorities.Count; i++)
+		// Calculate target lightness based on theme type
+		float targetLightness;
+		if (isDarkTheme)
 		{
-			Priority priority = priorities[i];
-
-			// Calculate position in extended range (0.0 to 1.0)
-			float position = i / (float)(priorities.Count - 1);
-
-			float targetLightness;
-			if (isDarkTheme)
-			{
-				// In dark themes, higher priority (later in enum) gets higher lightness
-				targetLightness = extendedMinLightness + (position * finalRange);
-			}
-			else
-			{
-				// In light themes, higher priority (later in enum) gets lower lightness
-				targetLightness = extendedMaxLightness - (position * finalRange);
-			}
-
-			result[priority] = Math.Clamp(targetLightness, 0.0f, 1.0f);
+			// In dark themes, higher priority (later in enum) gets higher lightness (more visible)
+			targetLightness = minLightness + (position * lightnessRange);
+		}
+		else
+		{
+			// In light themes, higher priority (later in enum) gets lower lightness (more visible)
+			targetLightness = maxLightness - (position * lightnessRange);
 		}
 
-		return result;
+		return Math.Clamp(targetLightness, 0.0f, 1.0f);
 	}
 
 	/// <summary>
