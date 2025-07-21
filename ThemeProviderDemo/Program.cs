@@ -14,8 +14,13 @@ using ktsu.ThemeProvider.Themes.Catppuccin;
 
 internal static class Program
 {
-	private static Mocha theme = null!;
+	private static ISemanticTheme theme = null!;
 	private static ImGuiPaletteMapper imguiMapper = null!;
+
+	// Theme selection
+	private static readonly ISemanticTheme[] availableThemes = [new Latte(), new Frappe(), new Macchiato(), new Mocha()];
+	private static readonly string[] themeNames = ["Latte (Light)", "Frappe (Dark)", "Macchiato (Dark)", "Mocha (Darkest)"];
+	private static int selectedThemeIndex;
 
 	// UI State
 	private static int selectedSemanticMeaning = (int)SemanticMeaning.Primary;
@@ -46,7 +51,8 @@ internal static class Program
 
 	private static void OnStart()
 	{
-		theme = new Mocha();
+		selectedThemeIndex = 3; // Start with Mocha (darkest)
+		theme = availableThemes[selectedThemeIndex];
 		imguiMapper = new ImGuiPaletteMapper();
 
 		// Initialize with theme's primary color
@@ -119,7 +125,17 @@ internal static class Program
 
 	private static void RenderThemeOverview()
 	{
-		ImGui.TextUnformatted("Semantic Color Grid - Current Theme: Catppuccin Mocha");
+		// Theme selection
+		ImGui.TextUnformatted("Select Catppuccin Variant:");
+		if (ImGui.Combo("##ThemeVariant", ref selectedThemeIndex, themeNames, themeNames.Length))
+		{
+			theme = availableThemes[selectedThemeIndex];
+			// Clear cache when theme changes
+			cachedMeaning = null;
+			cachedMapping = null;
+		}
+
+		ImGui.TextUnformatted($"Semantic Color Grid - Current Theme: {themeNames[selectedThemeIndex]}");
 		ImGui.Separator();
 
 		// Get all semantic meanings and priorities
@@ -177,6 +193,7 @@ internal static class Program
 
 		ImGui.Spacing();
 		ImGui.TextUnformatted("Note: Neutral uses full range, non-neutral uses 50-90% of neutral range");
+		ImGui.TextUnformatted($"Theme Type: {(theme.IsDarkTheme ? "Dark" : "Light")} - Priority ordering {(theme.IsDarkTheme ? "low to high" : "high to low")} lightness");
 	}
 
 	private static void RenderSemanticColors()
