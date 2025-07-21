@@ -119,133 +119,64 @@ internal static class Program
 
 	private static void RenderThemeOverview()
 	{
-		ImGui.TextUnformatted("Current Theme: Catppuccin Mocha");
-		ImGui.Separator();
-
-		ImGui.TextUnformatted("Generated Semantic Colors with Contrast Examples:");
-		ImGui.TextUnformatted("Each color shows AA and AAA contrast-compliant colors below it.");
+		ImGui.TextUnformatted("Semantic Color Grid - Current Theme: Catppuccin Mocha");
 		ImGui.Separator();
 
 		// Get all semantic meanings and priorities
 		SemanticMeaning[] semanticMeanings = Enum.GetValues<SemanticMeaning>();
 		Priority[] sortedPriorities = [Priority.VeryLow, Priority.Low, Priority.MediumLow, Priority.Medium, Priority.MediumHigh, Priority.High, Priority.VeryHigh];
 
-		foreach (SemanticMeaning meaning in semanticMeanings)
+		// Create a single table showing all semantics and priorities in a grid
+		if (ImGui.BeginTable("ColorGrid", sortedPriorities.Length + 1, ImGuiTableFlags.Borders | ImGuiTableFlags.RowBg))
 		{
-			ImGui.TextUnformatted($"{meaning}:");
-
-			// Create a table for this semantic meaning with 3 rows per priority (main, AA, AAA)
-			if (ImGui.BeginTable($"##table_{meaning}", sortedPriorities.Length, ImGuiTableFlags.SizingFixedFit))
+			// Setup columns - first column for semantic names, rest for priorities
+			ImGui.TableSetupColumn("Semantic", ImGuiTableColumnFlags.WidthFixed, 100);
+			foreach (Priority priority in sortedPriorities)
 			{
-				// Header row with priority names
-				foreach (Priority priority in sortedPriorities)
-				{
-					ImGui.TableSetupColumn($"{priority}", ImGuiTableColumnFlags.WidthFixed, 120);
-				}
-				ImGui.TableHeadersRow();
+				ImGui.TableSetupColumn(priority.ToString(), ImGuiTableColumnFlags.WidthFixed, 80);
+			}
+			ImGui.TableHeadersRow();
 
-				// Main color row
+			// Create a row for each semantic meaning
+			foreach (SemanticMeaning meaning in semanticMeanings)
+			{
 				ImGui.TableNextRow();
-				foreach (Priority priority in sortedPriorities)
+
+				// First column: semantic meaning name
+				ImGui.TableSetColumnIndex(0);
+				ImGui.TextUnformatted(meaning.ToString());
+
+				// Rest of columns: color swatches for each priority
+				for (int i = 0; i < sortedPriorities.Length; i++)
 				{
-					ImGui.TableNextColumn();
+					ImGui.TableSetColumnIndex(i + 1);
+					Priority priority = sortedPriorities[i];
 					SemanticColorRequest request = new(meaning, priority);
 					PerceptualColor color = GetColorFromTheme(request);
 
 					if (color != default)
 					{
-						// Add grey background behind the color swatch
-						ImDrawListPtr drawList = ImGui.GetWindowDrawList();
-						Vector2 pos = ImGui.GetCursorScreenPos();
-						Vector2 swatchSize = new(100, 25);
-						uint greyBg = ImGui.ColorConvertFloat4ToU32(new Vector4(0.5f, 0.5f, 0.5f, 1.0f));
-						drawList.AddRectFilled(pos, pos + swatchSize + new Vector2(4, 4), greyBg);
-
-						ImGui.SetCursorScreenPos(pos + new Vector2(2, 2)); // Offset for grey border
-
 						Vector4 colorVec = new(color.RgbValue.R, color.RgbValue.G, color.RgbValue.B, 1.0f);
-						ImGui.ColorButton($"##{meaning}_{priority}_main", colorVec, ImGuiColorEditFlags.NoTooltip, swatchSize);
+						Vector2 swatchSize = new(70, 30);
+
+						if (ImGui.ColorButton($"##{meaning}_{priority}", colorVec, ImGuiColorEditFlags.NoTooltip, swatchSize))
+						{
+							// Optional: could copy color to clipboard or do something on click
+						}
 
 						if (ImGui.IsItemHovered())
 						{
-							ImGui.SetTooltip($"{meaning} {priority}\nRGB: {color.RgbValue.R:F3}, {color.RgbValue.G:F3}, {color.RgbValue.B:F3}");
+							ImGui.SetTooltip($"{meaning} - {priority}\nLightness: {color.Lightness:F2}\nRGB: {color.RgbValue.R:F3}, {color.RgbValue.G:F3}, {color.RgbValue.B:F3}\nHex: {color.RgbValue.ToHex()}");
 						}
 					}
 				}
-
-				// AA contrast row
-				ImGui.TableNextRow();
-				foreach (Priority priority in sortedPriorities)
-				{
-					ImGui.TableNextColumn();
-					SemanticColorRequest request = new(meaning, priority);
-					PerceptualColor color = GetColorFromTheme(request);
-
-					if (color != default)
-					{
-						// Add grey background behind the AA swatch
-						ImDrawListPtr drawList = ImGui.GetWindowDrawList();
-						Vector2 pos = ImGui.GetCursorScreenPos();
-						Vector2 swatchSize = new(100, 20);
-						uint greyBg = ImGui.ColorConvertFloat4ToU32(new Vector4(0.5f, 0.5f, 0.5f, 1.0f));
-						drawList.AddRectFilled(pos, pos + swatchSize + new Vector2(4, 4), greyBg);
-
-						ImGui.SetCursorScreenPos(pos + new Vector2(2, 2)); // Offset for grey border
-
-						RgbColor aaColor = FindContrastCompliantColor(color.RgbValue, AccessibilityLevel.AA);
-						Vector4 aaColorVec = new(aaColor.R, aaColor.G, aaColor.B, 1.0f);
-						ImGui.ColorButton($"##{meaning}_{priority}_aa", aaColorVec, ImGuiColorEditFlags.NoTooltip, swatchSize);
-
-						if (ImGui.IsItemHovered())
-						{
-							float contrast = ColorMath.GetContrastRatio(color.RgbValue, aaColor);
-							ImGui.SetTooltip($"AA Contrast: {contrast:F2}:1\nRGB: {aaColor.R:F3}, {aaColor.G:F3}, {aaColor.B:F3}");
-						}
-
-						ImGui.SameLine();
-						ImGui.TextUnformatted("AA");
-					}
-				}
-
-				// AAA contrast row
-				ImGui.TableNextRow();
-				foreach (Priority priority in sortedPriorities)
-				{
-					ImGui.TableNextColumn();
-					SemanticColorRequest request = new(meaning, priority);
-					PerceptualColor color = GetColorFromTheme(request);
-
-					if (color != default)
-					{
-						// Add grey background behind the AAA swatch
-						ImDrawListPtr drawList = ImGui.GetWindowDrawList();
-						Vector2 pos = ImGui.GetCursorScreenPos();
-						Vector2 swatchSize = new(100, 20);
-						uint greyBg = ImGui.ColorConvertFloat4ToU32(new Vector4(0.5f, 0.5f, 0.5f, 1.0f));
-						drawList.AddRectFilled(pos, pos + swatchSize + new Vector2(4, 4), greyBg);
-
-						ImGui.SetCursorScreenPos(pos + new Vector2(2, 2)); // Offset for grey border
-
-						RgbColor aaaColor = FindContrastCompliantColor(color.RgbValue, AccessibilityLevel.AAA);
-						Vector4 aaaColorVec = new(aaaColor.R, aaaColor.G, aaaColor.B, 1.0f);
-						ImGui.ColorButton($"##{meaning}_{priority}_aaa", aaaColorVec, ImGuiColorEditFlags.NoTooltip, swatchSize);
-
-						if (ImGui.IsItemHovered())
-						{
-							float contrast = ColorMath.GetContrastRatio(color.RgbValue, aaaColor);
-							ImGui.SetTooltip($"AAA Contrast: {contrast:F2}:1\nRGB: {aaaColor.R:F3}, {aaaColor.G:F3}, {aaaColor.B:F3}");
-						}
-
-						ImGui.SameLine();
-						ImGui.TextUnformatted("AAA");
-					}
-				}
-
-				ImGui.EndTable();
 			}
 
-			ImGui.Spacing();
+			ImGui.EndTable();
 		}
+
+		ImGui.Spacing();
+		ImGui.TextUnformatted("Note: Neutral uses full range, non-neutral uses 50-90% of neutral range");
 	}
 
 	private static void RenderSemanticColors()
@@ -748,42 +679,4 @@ internal static class Program
 
 		return whiteContrast > blackContrast ? white : black;
 	}
-
-	/// <summary>
-	/// Finds a color that meets the specified contrast requirement with the given background color.
-	/// Uses white or black, whichever provides better contrast.
-	/// </summary>
-	private static RgbColor FindContrastCompliantColor(RgbColor backgroundColor, AccessibilityLevel targetLevel)
-	{
-		float targetContrast = targetLevel switch
-		{
-			AccessibilityLevel.AAA => 7.0f,
-			AccessibilityLevel.AA => 4.5f,
-			_ => 3.0f
-		};
-
-		RgbColor white = new(1.0f, 1.0f, 1.0f);
-		RgbColor black = new(0.0f, 0.0f, 0.0f);
-
-		float whiteContrast = ColorMath.GetContrastRatio(white, backgroundColor);
-		float blackContrast = ColorMath.GetContrastRatio(black, backgroundColor);
-
-		// If either white or black meets the requirement, use the one with better contrast
-		if (whiteContrast >= targetContrast && blackContrast >= targetContrast)
-		{
-			return whiteContrast > blackContrast ? white : black;
-		}
-		else if (whiteContrast >= targetContrast)
-		{
-			return white;
-		}
-		else if (blackContrast >= targetContrast)
-		{
-			return black;
-		}
-
-		// If neither meets the requirement, return the one with better contrast
-		return whiteContrast > blackContrast ? white : black;
-	}
 }
-
