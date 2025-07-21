@@ -6,7 +6,11 @@ namespace ktsu.ThemeProviderDemo;
 using System.Numerics;
 using Hexa.NET.ImGui;
 using ktsu.ImGuiApp;
-using ktsu.ThemeProvider;
+using ktsu.ThemeProvider.Core;
+using ktsu.ThemeProvider.Engines;
+using ktsu.ThemeProvider.Semantic;
+using ktsu.ThemeProvider.Themes;
+using ktsu.ThemeProvider.Themes.Catppuccin;
 
 internal static class Program
 {
@@ -14,21 +18,33 @@ internal static class Program
 	private static SemanticPaletteEngine paletteEngine = null!;
 
 	// UI State
-	private static int selectedColorRole;
+	private static int selectedSemanticMeaning = (int)SemanticMeaning.Normal;
+	private static int selectedVisualRole = (int)VisualRole.Surface;
+	private static int selectedImportance = (int)ImportanceLevel.Medium;
+	private static bool isPrimary = true;
 	private static Vector3 selectedColorVec = Vector3.Zero;
 	private static Vector3 backgroundColorVec = new(0.1f, 0.1f, 0.1f);
 	private static bool isLargeText;
+
+	// Semantic request parameters
+	private static float desiredTemperature;
+	private static float desiredEnergy = 0.5f;
+	private static float desiredFormality = 0.5f;
+	private static int accessibilityRequirement = (int)AccessibilityLevel.AA;
 
 	// Form state
 	private static float sliderValue = 0.5f;
 	private static bool checkboxValue;
 	private static string textValue = "Text Input";
 
+	// Generated palette cache
+	private static SemanticPaletteResult? lastGeneratedPalette;
+
 	private static void Main()
 	{
 		ImGuiApp.Start(new()
 		{
-			Title = "ThemeProvider Demo - Catppuccin Mocha Theme Explorer",
+			Title = "ThemeProvider Demo - Semantic Color System",
 			OnRender = OnRender,
 			OnStart = OnStart,
 			SaveIniSettings = false,
@@ -40,8 +56,9 @@ internal static class Program
 		theme = CatppuccinMocha.CreateTheme();
 		paletteEngine = new SemanticPaletteEngine(theme);
 
-		// Initialize with theme's text color
-		if (theme.TryGetColor(ColorRole.Text, out ColorProperties textColor))
+		// Initialize with theme's primary text color
+		SemanticColorSpec textSpec = new(SemanticMeaning.Normal, VisualRole.Text, ImportanceLevel.Critical, isPrimary: true);
+		if (theme.TryGetColor(textSpec, out ColorProperties textColor))
 		{
 			selectedColorVec = new Vector3(textColor.RgbValue.R, textColor.RgbValue.G, textColor.RgbValue.B);
 		}
@@ -59,21 +76,21 @@ internal static class Program
 				ImGui.EndTabItem();
 			}
 
-			if (ImGui.BeginTabItem("Color Roles"))
+			if (ImGui.BeginTabItem("Semantic Colors"))
 			{
-				RenderColorRoles();
+				RenderSemanticColors();
+				ImGui.EndTabItem();
+			}
+
+			if (ImGui.BeginTabItem("Color Generator"))
+			{
+				RenderColorGenerator();
 				ImGui.EndTabItem();
 			}
 
 			if (ImGui.BeginTabItem("Accessibility"))
 			{
 				RenderAccessibilityDemo();
-				ImGui.EndTabItem();
-			}
-
-			if (ImGui.BeginTabItem("Semantic Engine"))
-			{
-				RenderSemanticEngine();
 				ImGui.EndTabItem();
 			}
 
@@ -90,59 +107,42 @@ internal static class Program
 	private static void ApplyCatppuccinTheme()
 	{
 		ImGuiStylePtr style = ImGui.GetStyle();
-
-		// Apply Catppuccin Mocha colors to ImGui
 		Span<Vector4> colors = style.Colors;
 
-		// Get theme colors
-		ColorProperties baseColor = theme.GetColor(ColorRole.Base);
-		ColorProperties textColor = theme.GetColor(ColorRole.Text);
-		ColorProperties primaryColor = theme.GetColor(ColorRole.Primary);
-		ColorProperties surface0Color = theme.GetColor(ColorRole.Surface0);
-		ColorProperties surface1Color = theme.GetColor(ColorRole.Surface1);
-		ColorProperties overlayColor = theme.GetColor(ColorRole.Overlay0);
+		// Get semantic colors from the theme
+		SemanticColorSpec baseSpec = new(SemanticMeaning.Normal, VisualRole.Background, ImportanceLevel.Low, isPrimary: true);
+		SemanticColorSpec textSpec = new(SemanticMeaning.Normal, VisualRole.Text, ImportanceLevel.Critical, isPrimary: true);
+		SemanticColorSpec surface0Spec = new(SemanticMeaning.Normal, VisualRole.Surface, ImportanceLevel.Low, isPrimary: true);
+		SemanticColorSpec surface1Spec = new(SemanticMeaning.Normal, VisualRole.Surface, ImportanceLevel.Medium, isPrimary: true);
+		SemanticColorSpec ctaSpec = new(SemanticMeaning.CallToAction, VisualRole.Widget, ImportanceLevel.Critical, isPrimary: true);
+		SemanticColorSpec successSpec = new(SemanticMeaning.Success, VisualRole.Widget, ImportanceLevel.High, isPrimary: true);
+		SemanticColorSpec errorSpec = new(SemanticMeaning.Error, VisualRole.Widget, ImportanceLevel.Critical, isPrimary: true);
 
-		// Convert to ImGui format
+		ColorProperties baseColor = theme.GetColor(baseSpec);
+		ColorProperties textColor = theme.GetColor(textSpec);
+		ColorProperties surface0Color = theme.GetColor(surface0Spec);
+		ColorProperties surface1Color = theme.GetColor(surface1Spec);
+		ColorProperties ctaColor = theme.GetColor(ctaSpec);
+
+		// Apply semantic colors to ImGui
 		colors[(int)ImGuiCol.Text] = ToImVec4(textColor.RgbValue);
-		colors[(int)ImGuiCol.TextDisabled] = ToImVec4(theme.GetColor(ColorRole.Subtext0).RgbValue);
 		colors[(int)ImGuiCol.WindowBg] = ToImVec4(baseColor.RgbValue);
 		colors[(int)ImGuiCol.ChildBg] = ToImVec4(baseColor.RgbValue);
 		colors[(int)ImGuiCol.PopupBg] = ToImVec4(surface0Color.RgbValue);
-		colors[(int)ImGuiCol.Border] = ToImVec4(theme.GetColor(ColorRole.Border).RgbValue);
-		colors[(int)ImGuiCol.BorderShadow] = ToImVec4(theme.GetColor(ColorRole.Shadow).RgbValue);
 		colors[(int)ImGuiCol.FrameBg] = ToImVec4(surface0Color.RgbValue);
 		colors[(int)ImGuiCol.FrameBgHovered] = ToImVec4(surface1Color.RgbValue);
-		colors[(int)ImGuiCol.FrameBgActive] = ToImVec4(theme.GetColor(ColorRole.Surface2).RgbValue);
-		colors[(int)ImGuiCol.TitleBg] = ToImVec4(theme.GetColor(ColorRole.Mantle).RgbValue);
-		colors[(int)ImGuiCol.TitleBgActive] = ToImVec4(surface0Color.RgbValue);
-		colors[(int)ImGuiCol.TitleBgCollapsed] = ToImVec4(theme.GetColor(ColorRole.Crust).RgbValue);
-		colors[(int)ImGuiCol.MenuBarBg] = ToImVec4(surface0Color.RgbValue);
-		colors[(int)ImGuiCol.ScrollbarBg] = ToImVec4(baseColor.RgbValue);
-		colors[(int)ImGuiCol.ScrollbarGrab] = ToImVec4(overlayColor.RgbValue);
-		colors[(int)ImGuiCol.ScrollbarGrabHovered] = ToImVec4(theme.GetColor(ColorRole.Overlay1).RgbValue);
-		colors[(int)ImGuiCol.ScrollbarGrabActive] = ToImVec4(theme.GetColor(ColorRole.Overlay2).RgbValue);
-		colors[(int)ImGuiCol.CheckMark] = ToImVec4(primaryColor.RgbValue);
-		colors[(int)ImGuiCol.SliderGrab] = ToImVec4(primaryColor.RgbValue);
-		colors[(int)ImGuiCol.SliderGrabActive] = ToImVec4(theme.GetColor(ColorRole.Blue).RgbValue);
-		colors[(int)ImGuiCol.Button] = ToImVec4(theme.GetColor(ColorRole.Button).RgbValue);
-		colors[(int)ImGuiCol.ButtonHovered] = ToImVec4(theme.GetColor(ColorRole.ButtonHover).RgbValue);
-		colors[(int)ImGuiCol.ButtonActive] = ToImVec4(theme.GetColor(ColorRole.ButtonActive).RgbValue);
+		colors[(int)ImGuiCol.Button] = ToImVec4(ctaColor.RgbValue);
+		colors[(int)ImGuiCol.ButtonHovered] = ToImVec4(AdjustBrightness(ctaColor.RgbValue, 1.1f));
+		colors[(int)ImGuiCol.ButtonActive] = ToImVec4(AdjustBrightness(ctaColor.RgbValue, 0.9f));
 		colors[(int)ImGuiCol.Header] = ToImVec4(surface0Color.RgbValue);
 		colors[(int)ImGuiCol.HeaderHovered] = ToImVec4(surface1Color.RgbValue);
-		colors[(int)ImGuiCol.HeaderActive] = ToImVec4(theme.GetColor(ColorRole.Surface2).RgbValue);
-		colors[(int)ImGuiCol.Separator] = ToImVec4(theme.GetColor(ColorRole.Divider).RgbValue);
-		colors[(int)ImGuiCol.SeparatorHovered] = ToImVec4(overlayColor.RgbValue);
-		colors[(int)ImGuiCol.SeparatorActive] = ToImVec4(theme.GetColor(ColorRole.Overlay1).RgbValue);
-		colors[(int)ImGuiCol.ResizeGrip] = ToImVec4(overlayColor.RgbValue);
-		colors[(int)ImGuiCol.ResizeGripHovered] = ToImVec4(theme.GetColor(ColorRole.Overlay1).RgbValue);
-		colors[(int)ImGuiCol.ResizeGripActive] = ToImVec4(theme.GetColor(ColorRole.Overlay2).RgbValue);
-		colors[(int)ImGuiCol.Tab] = ToImVec4(surface0Color.RgbValue);
-		colors[(int)ImGuiCol.TabHovered] = ToImVec4(surface1Color.RgbValue);
-		colors[(int)ImGuiCol.PlotLines] = ToImVec4(theme.GetColor(ColorRole.Blue).RgbValue);
-		colors[(int)ImGuiCol.PlotLinesHovered] = ToImVec4(theme.GetColor(ColorRole.Cyan).RgbValue);
-		colors[(int)ImGuiCol.PlotHistogram] = ToImVec4(theme.GetColor(ColorRole.Green).RgbValue);
-		colors[(int)ImGuiCol.PlotHistogramHovered] = ToImVec4(theme.GetColor(ColorRole.Yellow).RgbValue);
-		colors[(int)ImGuiCol.TextSelectedBg] = ToImVec4(theme.GetColor(ColorRole.Selection).RgbValue, 0.4f);
+		colors[(int)ImGuiCol.HeaderActive] = ToImVec4(surface1Color.RgbValue);
+
+		// Additional semantic colors
+		if (theme.TryGetColor(new(SemanticMeaning.Normal, VisualRole.Text, ImportanceLevel.Medium, isPrimary: false), out ColorProperties subtextColor))
+		{
+			colors[(int)ImGuiCol.TextDisabled] = ToImVec4(subtextColor.RgbValue);
+		}
 	}
 
 	private static void RenderThemeOverview()
@@ -153,62 +153,43 @@ internal static class Program
 		ImGui.TextUnformatted($"Type: {(theme.IsDarkTheme ? "Dark" : "Light")} Theme");
 		ImGui.Separator();
 
-		ImGui.TextUnformatted("Color Palette:");
+		ImGui.TextUnformatted("Semantic Color System:");
+		ImGui.TextUnformatted("Colors are defined by semantic meaning, visual role, and importance level rather than specific names.");
+		ImGui.Separator();
 
-		// Organize colors by category
-		Dictionary<string, List<(ColorRole role, ColorProperties color)>> categories = new()
+		ImGui.TextUnformatted("Color Specifications:");
+
+		// Group colors by visual role for better organization
+		Dictionary<VisualRole, List<(SemanticColorSpec spec, ColorProperties color)>> roleGroups = [];
+		foreach ((SemanticColorSpec spec, ColorProperties color) in theme.Colors)
 		{
-			["Base Colors"] = [],
-			["Surface Colors"] = [],
-			["Text Colors"] = [],
-			["Accent Colors"] = [],
-			["Semantic Colors"] = [],
-			["Interactive Colors"] = [],
-			["Specific Hues"] = []
-		};
-
-		foreach ((ColorRole role, ColorProperties color) in theme.AllColors)
-		{
-			string category = role switch
+			if (!roleGroups.TryGetValue(spec.Role, out List<(SemanticColorSpec spec, ColorProperties color)>? group))
 			{
-				ColorRole.Base or ColorRole.Mantle or ColorRole.Crust => "Base Colors",
-				ColorRole.Surface0 or ColorRole.Surface1 or ColorRole.Surface2 or
-				ColorRole.Overlay0 or ColorRole.Overlay1 or ColorRole.Overlay2 => "Surface Colors",
-				ColorRole.Text or ColorRole.Subtext0 or ColorRole.Subtext1 => "Text Colors",
-				ColorRole.Primary or ColorRole.Secondary => "Accent Colors",
-				ColorRole.Success or ColorRole.Warning or ColorRole.Error or ColorRole.Info => "Semantic Colors",
-				ColorRole.Button or ColorRole.ButtonHover or ColorRole.ButtonActive or ColorRole.ButtonDisabled or
-				ColorRole.Link or ColorRole.LinkHover or ColorRole.LinkActive or ColorRole.LinkVisited => "Interactive Colors",
-				ColorRole.Red or ColorRole.Green or ColorRole.Blue or ColorRole.Yellow or ColorRole.Orange or
-				ColorRole.Purple or ColorRole.Pink or ColorRole.Cyan or ColorRole.Teal or ColorRole.Lime or
-				ColorRole.Amber or ColorRole.Indigo or ColorRole.Violet or ColorRole.Rose or ColorRole.Sky or
-				ColorRole.Emerald => "Specific Hues",
-				_ => "Other"
-			};
-
-			if (categories.TryGetValue(category, out List<(ColorRole role, ColorProperties color)>? list))
-			{
-				list.Add((role, color));
+				group = [];
+				roleGroups[spec.Role] = group;
 			}
+			group.Add((spec, color));
 		}
 
 		float colorSize = 40f;
-		foreach ((string categoryName, List<(ColorRole role, ColorProperties color)> colors) in categories.Where(kvp => kvp.Value.Count > 0))
+		foreach ((VisualRole role, List<(SemanticColorSpec spec, ColorProperties color)> colors) in roleGroups.OrderBy(kvp => (int)kvp.Key))
 		{
-			if (ImGui.CollapsingHeader(categoryName))
+			if (ImGui.CollapsingHeader($"{role} Colors ({colors.Count})"))
 			{
-				int columns = Math.Max(1, (int)(ImGui.GetContentRegionAvail().X / (colorSize + 10f)));
-				if (ImGui.BeginTable($"{categoryName}Table", columns, ImGuiTableFlags.None))
+				int columns = Math.Max(1, (int)(ImGui.GetContentRegionAvail().X / 200f));
+				if (ImGui.BeginTable($"{role}Table", columns * 2, ImGuiTableFlags.None)) // 2 columns per color (swatch + info)
 				{
-					int col = 0;
-					foreach ((ColorRole role, ColorProperties color) in colors)
+					int itemCount = 0;
+					foreach ((SemanticColorSpec spec, ColorProperties color) in colors.OrderBy(x => (int)x.spec.Meaning).ThenBy(x => (int)x.spec.Importance))
 					{
-						if (col % columns == 0)
+						if (itemCount % columns == 0)
 						{
 							ImGui.TableNextRow();
 						}
 
-						ImGui.TableSetColumnIndex(col % columns);
+						// Swatch column
+						int baseColumnIndex = itemCount % columns * 2;
+						ImGui.TableSetColumnIndex(baseColumnIndex);
 
 						// Color swatch
 						ImDrawListPtr drawList = ImGui.GetWindowDrawList();
@@ -221,21 +202,24 @@ internal static class Program
 
 						ImGui.Dummy(new Vector2(colorSize, colorSize));
 
-						// Tooltip with details
 						if (ImGui.IsItemHovered())
 						{
 							ImGui.BeginTooltip();
-							ImGui.TextUnformatted($"{role}");
+							ImGui.TextUnformatted($"{spec}");
 							ImGui.TextUnformatted($"Hex: {color.RgbValue.ToHex()}");
-							ImGui.TextUnformatted($"RGB: {color.RgbValue.R:F3}, {color.RgbValue.G:F3}, {color.RgbValue.B:F3}");
 							ImGui.TextUnformatted($"Temperature: {color.Temperature:F2}");
 							ImGui.TextUnformatted($"Energy: {color.Energy:F2}");
 							ImGui.TextUnformatted($"Weight: {color.Weight:F2}");
 							ImGui.EndTooltip();
 						}
 
-						ImGui.TextUnformatted(role.ToString());
-						col++;
+						// Info column
+						ImGui.TableSetColumnIndex(baseColumnIndex + 1);
+						ImGui.TextUnformatted($"{spec.Meaning}");
+						ImGui.TextUnformatted($"{spec.Importance}");
+						ImGui.TextUnformatted($"{(spec.IsPrimary ? "Primary" : "Secondary")}");
+
+						itemCount++;
 					}
 
 					ImGui.EndTable();
@@ -244,32 +228,44 @@ internal static class Program
 		}
 	}
 
-	private static void RenderColorRoles()
+	private static void RenderSemanticColors()
 	{
-		ImGui.TextUnformatted("Explore individual color roles and their properties:");
+		ImGui.TextUnformatted("Explore the semantic color system:");
 		ImGui.Separator();
 
-		// Color role selector
-		string[] roleNames = Enum.GetNames<ColorRole>();
-		if (ImGui.Combo("Color Role", ref selectedColorRole, roleNames, roleNames.Length))
-		{
-			ColorRole role = (ColorRole)selectedColorRole;
-			if (theme.TryGetColor(role, out ColorProperties color))
-			{
-				selectedColorVec = new Vector3(color.RgbValue.R, color.RgbValue.G, color.RgbValue.B);
-			}
-		}
+		// Semantic color specification builder
+		ImGui.TextUnformatted("Build a Semantic Color Specification:");
 
-		ColorRole selectedRole = (ColorRole)selectedColorRole;
-		if (theme.TryGetColor(selectedRole, out ColorProperties selectedColor))
-		{
-			ImGui.Separator();
+		string[] meaningNames = Enum.GetNames<SemanticMeaning>();
+		ImGui.Combo("Semantic Meaning", ref selectedSemanticMeaning, meaningNames, meaningNames.Length);
 
-			// Large color preview
+		string[] roleNames = Enum.GetNames<VisualRole>();
+		ImGui.Combo("Visual Role", ref selectedVisualRole, roleNames, roleNames.Length);
+
+		string[] importanceNames = Enum.GetNames<ImportanceLevel>();
+		ImGui.Combo("Importance Level", ref selectedImportance, importanceNames, importanceNames.Length);
+
+		ImGui.Checkbox("Primary (vs Secondary)", ref isPrimary);
+
+		// Build the current spec
+		SemanticColorSpec currentSpec = new(
+			(SemanticMeaning)selectedSemanticMeaning,
+			(VisualRole)selectedVisualRole,
+			(ImportanceLevel)selectedImportance,
+			isPrimary
+		);
+
+		ImGui.Separator();
+		ImGui.TextUnformatted($"Current Specification: {currentSpec}");
+
+		// Display the color if it exists in the theme
+		if (theme.TryGetColor(currentSpec, out ColorProperties color))
+		{
+			// Color preview
 			float previewSize = 150f;
 			ImDrawListPtr drawList = ImGui.GetWindowDrawList();
 			Vector2 pos = ImGui.GetCursorScreenPos();
-			Vector4 rgbColor = ToImVec4(selectedColor.RgbValue);
+			Vector4 rgbColor = ToImVec4(color.RgbValue);
 			drawList.AddRectFilled(pos, new Vector2(pos.X + previewSize, pos.Y + previewSize),
 								   ImGui.ColorConvertFloat4ToU32(rgbColor));
 			drawList.AddRect(pos, new Vector2(pos.X + previewSize, pos.Y + previewSize),
@@ -279,29 +275,188 @@ internal static class Program
 			ImGui.SameLine();
 			ImGui.BeginGroup();
 
-			// Color information
-			ImGui.TextUnformatted($"Role: {selectedRole}");
-			ImGui.TextUnformatted($"Hex: {selectedColor.RgbValue.ToHex()}");
-			ImGui.TextUnformatted($"RGB: ({selectedColor.RgbValue.R:F3}, {selectedColor.RgbValue.G:F3}, {selectedColor.RgbValue.B:F3})");
+			ImGui.TextUnformatted("Color Properties:");
+			ImGui.TextUnformatted($"Hex: {color.RgbValue.ToHex()}");
+			ImGui.TextUnformatted($"RGB: ({color.RgbValue.R:F3}, {color.RgbValue.G:F3}, {color.RgbValue.B:F3})");
 
-			// Oklab information
-			OklabColor oklab = selectedColor.OklabValue;
+			OklabColor oklab = color.OklabValue;
 			ImGui.TextUnformatted($"Oklab: L={oklab.L:F3}, a={oklab.A:F3}, b={oklab.B:F3}");
 
-			(float l, float c, float h) = oklab.ToPolar();
-			ImGui.TextUnformatted($"LCH: L={l:F3}, C={c:F3}, H={h:F1}°");
-
 			ImGui.Separator();
-
-			// Semantic properties
 			ImGui.TextUnformatted("Semantic Properties:");
-			ImGui.TextUnformatted($"Weight: {selectedColor.Weight:F2}");
-			ImGui.TextUnformatted($"Temperature: {selectedColor.Temperature:F2} ({(selectedColor.Temperature > 0 ? "Warm" : "Cool")})");
-			ImGui.TextUnformatted($"Energy: {selectedColor.Energy:F2}");
-			ImGui.TextUnformatted($"Formality: {selectedColor.Formality:F2}");
-			ImGui.TextUnformatted($"Accessibility Priority: {selectedColor.AccessibilityPriority:F2}");
+			ImGui.TextUnformatted($"Weight: {color.Weight:F2}");
+			ImGui.TextUnformatted($"Temperature: {color.Temperature:F2} ({(color.Temperature > 0 ? "Warm" : "Cool")})");
+			ImGui.TextUnformatted($"Energy: {color.Energy:F2}");
+			ImGui.TextUnformatted($"Formality: {color.Formality:F2}");
+			ImGui.TextUnformatted($"Accessibility Priority: {color.AccessibilityPriority:F2}");
 
 			ImGui.EndGroup();
+		}
+		else
+		{
+			ImGui.TextUnformatted("This specification is not defined in the current theme.");
+
+			// Show closest match
+			(SemanticColorSpec closestSpec, ColorProperties closestColor) = theme.FindClosestColor(
+				ColorProperties.FromRgb(new RgbColor(0.5f, 0.5f, 0.5f), currentSpec)
+			);
+
+			ImGui.Separator();
+			ImGui.TextUnformatted($"Closest match: {closestSpec}");
+
+			// Show closest color
+			float previewSize = 100f;
+			ImDrawListPtr drawList = ImGui.GetWindowDrawList();
+			Vector2 pos = ImGui.GetCursorScreenPos();
+			Vector4 rgbColor = ToImVec4(closestColor.RgbValue);
+			drawList.AddRectFilled(pos, new Vector2(pos.X + previewSize, pos.Y + previewSize),
+								   ImGui.ColorConvertFloat4ToU32(rgbColor));
+			ImGui.Dummy(new Vector2(previewSize, previewSize));
+		}
+	}
+
+	private static void RenderColorGenerator()
+	{
+		ImGui.TextUnformatted("Generate semantic color palettes using the engine:");
+		ImGui.Separator();
+
+		// Request parameters
+		ImGui.TextUnformatted("Semantic Request Parameters:");
+		ImGui.SliderFloat("Desired Temperature", ref desiredTemperature, -1.0f, 1.0f, "%.2f");
+		ImGui.SliderFloat("Desired Energy", ref desiredEnergy, 0.0f, 1.0f, "%.2f");
+		ImGui.SliderFloat("Desired Formality", ref desiredFormality, 0.0f, 1.0f, "%.2f");
+
+		string[] accessibilityNames = Enum.GetNames<AccessibilityLevel>();
+		ImGui.Combo("Accessibility Requirement", ref accessibilityRequirement, accessibilityNames, accessibilityNames.Length);
+
+		if (ImGui.Button("Generate Semantic Palette"))
+		{
+			GenerateSemanticPalette();
+		}
+
+		ImGui.Separator();
+
+		if (lastGeneratedPalette != null)
+		{
+			RenderGeneratedPalette(lastGeneratedPalette);
+		}
+	}
+
+	private static void GenerateSemanticPalette()
+	{
+		// Get base background color for contrast calculations
+		SemanticColorSpec baseSpec = new(SemanticMeaning.Normal, VisualRole.Background, ImportanceLevel.Low, isPrimary: true);
+		ColorProperties baseColor = theme.GetColor(baseSpec);
+
+		// Create a semantic graph with various color requests
+		SemanticColorGraph graph = SemanticColorGraph.CreateBuilder()
+			.AddRequest(new SemanticColorRequest
+			{
+				PrimarySpec = new(SemanticMeaning.CallToAction, VisualRole.Widget, ImportanceLevel.Critical, isPrimary: true),
+				DesiredTemperature = desiredTemperature,
+				DesiredEnergy = desiredEnergy,
+				DesiredFormality = desiredFormality,
+				AccessibilityRequirement = (AccessibilityLevel)accessibilityRequirement,
+				BackgroundColor = baseColor.RgbValue,
+				ImportanceWeight = 1.0f
+			})
+			.AddRequest(new SemanticColorRequest
+			{
+				PrimarySpec = new(SemanticMeaning.Success, VisualRole.Text, ImportanceLevel.High, isPrimary: true),
+				DesiredTemperature = desiredTemperature * 0.5f,
+				DesiredEnergy = desiredEnergy,
+				DesiredFormality = desiredFormality,
+				AccessibilityRequirement = (AccessibilityLevel)accessibilityRequirement,
+				BackgroundColor = baseColor.RgbValue,
+				ImportanceWeight = 0.8f
+			})
+			.AddRequest(new SemanticColorRequest
+			{
+				PrimarySpec = new(SemanticMeaning.Warning, VisualRole.Widget, ImportanceLevel.High, isPrimary: true),
+				DesiredTemperature = Math.Max(0.0f, desiredTemperature),
+				DesiredEnergy = Math.Max(0.6f, desiredEnergy),
+				DesiredFormality = desiredFormality,
+				AccessibilityRequirement = (AccessibilityLevel)accessibilityRequirement,
+				BackgroundColor = baseColor.RgbValue,
+				ImportanceWeight = 0.7f
+			})
+			.AddRequest(new SemanticColorRequest
+			{
+				PrimarySpec = new(SemanticMeaning.Error, VisualRole.Text, ImportanceLevel.Critical, isPrimary: true),
+				DesiredTemperature = Math.Max(0.2f, desiredTemperature),
+				DesiredEnergy = Math.Max(0.7f, desiredEnergy),
+				DesiredFormality = desiredFormality,
+				AccessibilityRequirement = (AccessibilityLevel)accessibilityRequirement,
+				BackgroundColor = baseColor.RgbValue,
+				ImportanceWeight = 0.9f
+			})
+			.AddRequest(new SemanticColorRequest
+			{
+				PrimarySpec = new(SemanticMeaning.Information, VisualRole.Surface, ImportanceLevel.Medium, isPrimary: true),
+				DesiredTemperature = Math.Min(0.0f, desiredTemperature),
+				DesiredEnergy = desiredEnergy * 0.8f,
+				DesiredFormality = desiredFormality,
+				AccessibilityRequirement = (AccessibilityLevel)accessibilityRequirement,
+				BackgroundColor = baseColor.RgbValue,
+				ImportanceWeight = 0.6f
+			})
+			.AddHarmony(fromIndex: 0, toIndex: 1, weight: 0.8f) // CTA and Success should harmonize
+			.AddHarmony(fromIndex: 2, toIndex: 3, weight: 0.6f) // Warning and Error should relate
+			.Build();
+
+		lastGeneratedPalette = paletteEngine.GeneratePalette(graph);
+	}
+
+	private static void RenderGeneratedPalette(SemanticPaletteResult result)
+	{
+		ImGui.TextUnformatted("Generated Semantic Palette:");
+		ImGui.TextUnformatted($"Generated {result.GeneratedColors.Length} colors");
+		ImGui.TextUnformatted($"Overall Harmony Score: {result.OverallHarmonyScore:F2}");
+		ImGui.TextUnformatted($"Meets Accessibility Requirements: {(result.MeetsAccessibilityRequirements ? "Yes" : "No")}");
+
+		if (result.Warnings.Length > 0)
+		{
+			ImGui.Separator();
+			ImGui.TextUnformatted("Warnings:");
+			foreach (string warning in result.Warnings)
+			{
+				ImGui.TextColored(new Vector4(1, 1, 0, 1), $"• {warning}");
+			}
+		}
+
+		ImGui.Separator();
+
+		string[] requestNames = ["Call-to-Action", "Success", "Warning", "Error", "Information"];
+		float swatchSize = 60f;
+
+		for (int i = 0; i < Math.Min(result.GeneratedColors.Length, requestNames.Length); i++)
+		{
+			RgbColor color = result.GeneratedColors[i];
+			float accessibilityScore = result.AccessibilityScores[i];
+			float semanticScore = result.SemanticMatchScores[i];
+
+			// Color swatch
+			ImDrawListPtr drawList = ImGui.GetWindowDrawList();
+			Vector2 pos = ImGui.GetCursorScreenPos();
+			Vector4 rgbVec = ToImVec4(color);
+			drawList.AddRectFilled(pos, new Vector2(pos.X + swatchSize, pos.Y + swatchSize),
+								   ImGui.ColorConvertFloat4ToU32(rgbVec));
+			drawList.AddRect(pos, new Vector2(pos.X + swatchSize, pos.Y + swatchSize),
+							ImGui.ColorConvertFloat4ToU32(new Vector4(1, 1, 1, 0.3f)));
+			ImGui.Dummy(new Vector2(swatchSize, swatchSize));
+
+			ImGui.SameLine();
+			ImGui.BeginGroup();
+			ImGui.TextUnformatted(requestNames[i]);
+			ImGui.TextUnformatted($"Hex: {color.ToHex()}");
+			ImGui.TextUnformatted($"Accessibility: {accessibilityScore:F2}");
+			ImGui.TextUnformatted($"Semantic Match: {semanticScore:F2}");
+			ImGui.EndGroup();
+
+			if (i < result.GeneratedColors.Length - 1)
+			{
+				ImGui.Separator();
+			}
 		}
 	}
 
@@ -361,241 +516,140 @@ internal static class Program
 		drawList.AddRectFilled(pos, new Vector2(pos.X + previewSize.X, pos.Y + previewSize.Y),
 							   ImGui.ColorConvertFloat4ToU32(new Vector4(backgroundColorVec, 1)));
 
-		// Text - using ImGui text instead of direct drawing to avoid unsafe context
+		// Text
 		ImGui.SetCursorScreenPos(new Vector2(pos.X + 10, pos.Y + 10));
 		ImGui.TextColored(new Vector4(selectedColorVec, 1), isLargeText ? "Large Text Sample (18pt+)" : "Normal Text Sample");
 
 		ImGui.Dummy(previewSize);
-
-		// Test with theme colors
-		ImGui.Separator();
-		ImGui.TextUnformatted("Theme Color Accessibility Test:");
-
-		if (ImGui.BeginTable("AccessibilityTable", 4, ImGuiTableFlags.Borders | ImGuiTableFlags.RowBg))
-		{
-			ImGui.TableSetupColumn("Foreground");
-			ImGui.TableSetupColumn("Background");
-			ImGui.TableSetupColumn("Contrast");
-			ImGui.TableSetupColumn("Level");
-			ImGui.TableHeadersRow();
-
-			// Test common combinations
-			(ColorRole fg, ColorRole bg)[] combinations =
-			[
-				(ColorRole.Text, ColorRole.Base),
-				(ColorRole.Subtext0, ColorRole.Base),
-				(ColorRole.Primary, ColorRole.Base),
-				(ColorRole.Success, ColorRole.Base),
-				(ColorRole.Warning, ColorRole.Base),
-				(ColorRole.Error, ColorRole.Base),
-				(ColorRole.Text, ColorRole.Surface0),
-				(ColorRole.Primary, ColorRole.Surface1),
-			];
-
-			foreach ((ColorRole fgRole, ColorRole bgRole) in combinations)
-			{
-				if (theme.TryGetColor(fgRole, out ColorProperties fgColor) && theme.TryGetColor(bgRole, out ColorProperties bgColor))
-				{
-					float contrast = ColorMath.GetContrastRatio(fgColor.RgbValue, bgColor.RgbValue);
-					AccessibilityLevel level = ColorMath.GetAccessibilityLevel(fgColor.RgbValue, bgColor.RgbValue, false);
-
-					ImGui.TableNextRow();
-					ImGui.TableSetColumnIndex(0);
-					ImGui.TextUnformatted(fgRole.ToString());
-
-					ImGui.TableSetColumnIndex(1);
-					ImGui.TextUnformatted(bgRole.ToString());
-
-					ImGui.TableSetColumnIndex(2);
-					ImGui.TextUnformatted($"{contrast:F2}:1");
-
-					ImGui.TableSetColumnIndex(3);
-					Vector4 color = level switch
-					{
-						AccessibilityLevel.AAA => new Vector4(0, 1, 0, 1),
-						AccessibilityLevel.AA => new Vector4(1, 1, 0, 1),
-						_ => new Vector4(1, 0, 0, 1)
-					};
-					ImGui.TextColored(color, level.ToString());
-				}
-			}
-
-			ImGui.EndTable();
-		}
-	}
-
-	private static void RenderSemanticEngine()
-	{
-		ImGui.TextUnformatted("Generate semantic color palettes using the theme engine:");
-		ImGui.Separator();
-
-		// Create a simple semantic request
-		ColorProperties baseColor = theme.GetColor(ColorRole.Base);
-		SemanticColorGraph graph = SemanticColorGraph.CreateBuilder()
-			.AddRequest(ColorRole.Primary, AccessibilityLevel.AA, baseColor.RgbValue)
-			.AddRequest(ColorRole.Secondary, AccessibilityLevel.AA, baseColor.RgbValue)
-			.AddRequest(ColorRole.Success, AccessibilityLevel.AA, baseColor.RgbValue)
-			.AddRequest(ColorRole.Warning, AccessibilityLevel.AA, baseColor.RgbValue)
-			.AddRequest(ColorRole.Error, AccessibilityLevel.AA, baseColor.RgbValue)
-			.AddHarmony(0, 1, 0.8f) // Primary and Secondary should be harmonious
-			.Build();
-
-		SemanticPaletteResult result = paletteEngine.GeneratePalette(graph);
-
-		ImGui.TextUnformatted($"Generated {result.GeneratedColors.Length} colors");
-		ImGui.TextUnformatted($"Overall Harmony Score: {result.OverallHarmonyScore:F2}");
-		ImGui.TextUnformatted($"Meets Accessibility Requirements: {(result.MeetsAccessibilityRequirements ? "Yes" : "No")}");
-
-		if (result.Warnings.Length > 0)
-		{
-			ImGui.Separator();
-			ImGui.TextUnformatted("Warnings:");
-			foreach (string warning in result.Warnings)
-			{
-				ImGui.TextColored(new Vector4(1, 1, 0, 1), $"• {warning}");
-			}
-		}
-
-		ImGui.Separator();
-		ImGui.TextUnformatted("Generated Palette:");
-
-		string[] roleNames = ["Primary", "Secondary", "Success", "Warning", "Error"];
-		float swatchSize = 60f;
-
-		for (int i = 0; i < result.GeneratedColors.Length && i < roleNames.Length; i++)
-		{
-			RgbColor color = result.GeneratedColors[i];
-			float accessibilityScore = result.AccessibilityScores[i];
-			float semanticScore = result.SemanticMatchScores[i];
-
-			// Color swatch
-			ImDrawListPtr drawList = ImGui.GetWindowDrawList();
-			Vector2 pos = ImGui.GetCursorScreenPos();
-			Vector4 rgbVec = ToImVec4(color);
-			drawList.AddRectFilled(pos, new Vector2(pos.X + swatchSize, pos.Y + swatchSize),
-								   ImGui.ColorConvertFloat4ToU32(rgbVec));
-			drawList.AddRect(pos, new Vector2(pos.X + swatchSize, pos.Y + swatchSize),
-							ImGui.ColorConvertFloat4ToU32(new Vector4(1, 1, 1, 0.3f)));
-			ImGui.Dummy(new Vector2(swatchSize, swatchSize));
-
-			ImGui.SameLine();
-			ImGui.BeginGroup();
-			ImGui.TextUnformatted(roleNames[i]);
-			ImGui.TextUnformatted($"Hex: {color.ToHex()}");
-			ImGui.TextUnformatted($"Accessibility: {accessibilityScore:F2}");
-			ImGui.TextUnformatted($"Semantic Match: {semanticScore:F2}");
-			ImGui.EndGroup();
-
-			if (i < result.GeneratedColors.Length - 1)
-			{
-				ImGui.Separator();
-			}
-		}
 	}
 
 	private static void RenderUIPreview()
 	{
-		ImGui.TextUnformatted("Live preview of theme applied to various UI elements:");
+		ImGui.TextUnformatted("Live preview of semantic theme applied to various UI elements:");
 		ImGui.Separator();
 
-		// Buttons
-		ImGui.TextUnformatted("Buttons:");
-		if (ImGui.Button("Primary Button"))
-		{
-			// Action
-		}
-		ImGui.SameLine();
+		// Semantic buttons
+		ImGui.TextUnformatted("Semantic Buttons:");
 
-		ImGui.PushStyleColor(ImGuiCol.Button, ToImVec4(theme.GetColor(ColorRole.Success).RgbValue));
-		ImGui.PushStyleColor(ImGuiCol.ButtonHovered, ToImVec4(theme.GetColor(ColorRole.Green).RgbValue));
-		if (ImGui.Button("Success Button"))
+		// Call-to-action button
+		if (theme.TryGetColor(new(SemanticMeaning.CallToAction, VisualRole.Widget, ImportanceLevel.Critical), out ColorProperties ctaColor))
 		{
-			// Action
+			RgbColor buttonTextColor = GetContrastingTextColor(ctaColor.RgbValue);
+			ImGui.PushStyleColor(ImGuiCol.Button, ToImVec4(ctaColor.RgbValue));
+			ImGui.PushStyleColor(ImGuiCol.ButtonHovered, ToImVec4(AdjustBrightness(ctaColor.RgbValue, 1.1f)));
+			ImGui.PushStyleColor(ImGuiCol.Text, ToImVec4(buttonTextColor));
+			if (ImGui.Button("Call-to-Action"))
+			{
+				// Action
+			}
+			ImGui.PopStyleColor(3);
+			ImGui.SameLine();
 		}
-		ImGui.PopStyleColor(2);
 
-		ImGui.SameLine();
-
-		ImGui.PushStyleColor(ImGuiCol.Button, ToImVec4(theme.GetColor(ColorRole.Error).RgbValue));
-		ImGui.PushStyleColor(ImGuiCol.ButtonHovered, ToImVec4(theme.GetColor(ColorRole.Red).RgbValue));
-		if (ImGui.Button("Error Button"))
+		// Success button
+		if (theme.TryGetColor(new(SemanticMeaning.Success, VisualRole.Widget, ImportanceLevel.High), out ColorProperties successColor))
 		{
-			// Action
+			RgbColor buttonTextColor = GetContrastingTextColor(successColor.RgbValue);
+			ImGui.PushStyleColor(ImGuiCol.Button, ToImVec4(successColor.RgbValue));
+			ImGui.PushStyleColor(ImGuiCol.ButtonHovered, ToImVec4(AdjustBrightness(successColor.RgbValue, 1.1f)));
+			ImGui.PushStyleColor(ImGuiCol.Text, ToImVec4(buttonTextColor));
+			if (ImGui.Button("Success"))
+			{
+				// Action
+			}
+			ImGui.PopStyleColor(3);
+			ImGui.SameLine();
 		}
-		ImGui.PopStyleColor(2);
+
+		// Error button
+		if (theme.TryGetColor(new(SemanticMeaning.Error, VisualRole.Widget, ImportanceLevel.Critical), out ColorProperties errorColor))
+		{
+			RgbColor buttonTextColor = GetContrastingTextColor(errorColor.RgbValue);
+			ImGui.PushStyleColor(ImGuiCol.Button, ToImVec4(errorColor.RgbValue));
+			ImGui.PushStyleColor(ImGuiCol.ButtonHovered, ToImVec4(AdjustBrightness(errorColor.RgbValue, 1.1f)));
+			ImGui.PushStyleColor(ImGuiCol.Text, ToImVec4(buttonTextColor));
+			if (ImGui.Button("Error"))
+			{
+				// Action
+			}
+			ImGui.PopStyleColor(3);
+		}
 
 		ImGui.Separator();
 
 		// Form elements
 		ImGui.TextUnformatted("Form Elements:");
 		ImGui.SliderFloat("Slider", ref sliderValue, 0f, 1f);
-
 		ImGui.Checkbox("Checkbox", ref checkboxValue);
-
 		ImGui.InputText("Input", ref textValue, 100);
 
 		ImGui.Separator();
 
-		// Progress bars with theme colors
+		// Progress bars with semantic colors
 		ImGui.TextUnformatted("Progress Indicators:");
 
-		ImGui.PushStyleColor(ImGuiCol.PlotHistogram, ToImVec4(theme.GetColor(ColorRole.Success).RgbValue));
-		ImGui.ProgressBar(0.7f, new Vector2(0, 0), "70%");
-		ImGui.PopStyleColor();
-
-		ImGui.PushStyleColor(ImGuiCol.PlotHistogram, ToImVec4(theme.GetColor(ColorRole.Warning).RgbValue));
-		ImGui.ProgressBar(0.4f, new Vector2(0, 0), "40%");
-		ImGui.PopStyleColor();
-
-		ImGui.PushStyleColor(ImGuiCol.PlotHistogram, ToImVec4(theme.GetColor(ColorRole.Error).RgbValue));
-		ImGui.ProgressBar(0.2f, new Vector2(0, 0), "20%");
-		ImGui.PopStyleColor();
-
-		ImGui.Separator();
-
-		// Color-coded text
-		ImGui.TextUnformatted("Themed Text:");
-		ImGui.TextColored(ToImVec4(theme.GetColor(ColorRole.Success).RgbValue), "Success message");
-		ImGui.TextColored(ToImVec4(theme.GetColor(ColorRole.Warning).RgbValue), "Warning message");
-		ImGui.TextColored(ToImVec4(theme.GetColor(ColorRole.Error).RgbValue), "Error message");
-		ImGui.TextColored(ToImVec4(theme.GetColor(ColorRole.Info).RgbValue), "Info message");
-
-		ImGui.Separator();
-
-		// Tables with theme colors
-		ImGui.TextUnformatted("Themed Table:");
-		if (ImGui.BeginTable("PreviewTable", 3, ImGuiTableFlags.Borders | ImGuiTableFlags.RowBg))
+		if (theme.TryGetColor(new(SemanticMeaning.Success, VisualRole.Widget, ImportanceLevel.High), out ColorProperties successWidget))
 		{
-			ImGui.TableSetupColumn("Name");
-			ImGui.TableSetupColumn("Status");
-			ImGui.TableSetupColumn("Value");
-			ImGui.TableHeadersRow();
+			ImGui.PushStyleColor(ImGuiCol.PlotHistogram, ToImVec4(successWidget.RgbValue));
+			ImGui.ProgressBar(0.7f, new Vector2(0, 0), "70% Complete");
+			ImGui.PopStyleColor();
+		}
 
-			(string name, string status, string value, ColorRole color)[] statuses =
-			[
-				("Task 1", "Complete", "100%", ColorRole.Success),
-				("Task 2", "In Progress", "60%", ColorRole.Warning),
-				("Task 3", "Failed", "0%", ColorRole.Error),
-				("Task 4", "Pending", "25%", ColorRole.Info),
-			];
+		if (theme.TryGetColor(new(SemanticMeaning.Warning, VisualRole.Widget, ImportanceLevel.High), out ColorProperties warningWidget))
+		{
+			ImGui.PushStyleColor(ImGuiCol.PlotHistogram, ToImVec4(warningWidget.RgbValue));
+			ImGui.ProgressBar(0.4f, new Vector2(0, 0), "40% Warning");
+			ImGui.PopStyleColor();
+		}
 
-			foreach ((string name, string status, string value, ColorRole color) in statuses)
-			{
-				ImGui.TableNextRow();
+		if (theme.TryGetColor(new(SemanticMeaning.Error, VisualRole.Widget, ImportanceLevel.Critical), out ColorProperties errorWidget))
+		{
+			ImGui.PushStyleColor(ImGuiCol.PlotHistogram, ToImVec4(errorWidget.RgbValue));
+			ImGui.ProgressBar(0.2f, new Vector2(0, 0), "20% Critical");
+			ImGui.PopStyleColor();
+		}
 
-				ImGui.TableSetColumnIndex(0);
-				ImGui.TextUnformatted(name);
+		ImGui.Separator();
 
-				ImGui.TableSetColumnIndex(1);
-				ImGui.TextColored(ToImVec4(theme.GetColor(color).RgbValue), status);
-
-				ImGui.TableSetColumnIndex(2);
-				ImGui.TextUnformatted(value);
-			}
-
-			ImGui.EndTable();
+		// Semantic text
+		ImGui.TextUnformatted("Semantic Text:");
+		if (theme.TryGetColor(new(SemanticMeaning.Success, VisualRole.Text, ImportanceLevel.High), out ColorProperties successText))
+		{
+			ImGui.TextColored(ToImVec4(successText.RgbValue), "Success: Operation completed successfully");
+		}
+		if (theme.TryGetColor(new(SemanticMeaning.Warning, VisualRole.Text, ImportanceLevel.High), out ColorProperties warningText))
+		{
+			ImGui.TextColored(ToImVec4(warningText.RgbValue), "Warning: Please review your input");
+		}
+		if (theme.TryGetColor(new(SemanticMeaning.Error, VisualRole.Text, ImportanceLevel.Critical), out ColorProperties errorText))
+		{
+			ImGui.TextColored(ToImVec4(errorText.RgbValue), "Error: Operation failed");
+		}
+		if (theme.TryGetColor(new(SemanticMeaning.Information, VisualRole.Text, ImportanceLevel.Medium), out ColorProperties infoText))
+		{
+			ImGui.TextColored(ToImVec4(infoText.RgbValue), "Information: Additional details available");
 		}
 	}
 
 	private static Vector4 ToImVec4(RgbColor color, float alpha = 1.0f) => new(color.R, color.G, color.B, alpha);
+
+	private static RgbColor AdjustBrightness(RgbColor color, float factor)
+	{
+		return new RgbColor(
+			Math.Clamp(color.R * factor, 0f, 1f),
+			Math.Clamp(color.G * factor, 0f, 1f),
+			Math.Clamp(color.B * factor, 0f, 1f)
+		);
+	}
+
+	private static RgbColor GetContrastingTextColor(RgbColor backgroundColor)
+	{
+		RgbColor white = new(1f, 1f, 1f);
+		RgbColor black = new(0f, 0f, 0f);
+
+		float whiteContrast = ColorMath.GetContrastRatio(white, backgroundColor);
+		float blackContrast = ColorMath.GetContrastRatio(black, backgroundColor);
+
+		return whiteContrast > blackContrast ? white : black;
+	}
 }
