@@ -43,10 +43,11 @@ public sealed class ImGuiPaletteMapper : IPaletteMapper<ImGuiCol, Vector4>
 			{ ImGuiCol.ScrollbarGrabHovered, new(SemanticMeaning.Neutral, Priority.MediumHigh)},
 			{ ImGuiCol.ScrollbarGrabActive, new(SemanticMeaning.Neutral, Priority.High)},
 
-			{ ImGuiCol.Button, new(SemanticMeaning.Primary, Priority.Medium)},
+			{ ImGuiCol.Button, new(SemanticMeaning.Primary, Priority.MediumHigh)},
 			{ ImGuiCol.ButtonHovered, new(SemanticMeaning.Primary, Priority.High)},
 			{ ImGuiCol.ButtonActive, new(SemanticMeaning.Primary, Priority.VeryHigh)},
-			{ ImGuiCol.Header, new(SemanticMeaning.Primary, Priority.Medium)},
+
+			{ ImGuiCol.Header, new(SemanticMeaning.Primary, Priority.MediumHigh)},
 			{ ImGuiCol.HeaderHovered, new(SemanticMeaning.Primary, Priority.High)},
 			{ ImGuiCol.HeaderActive, new(SemanticMeaning.Primary, Priority.VeryHigh)},
 
@@ -59,8 +60,8 @@ public sealed class ImGuiPaletteMapper : IPaletteMapper<ImGuiCol, Vector4>
 			{ ImGuiCol.SeparatorActive, new(SemanticMeaning.Neutral, Priority.VeryHigh)},
 
 			{ ImGuiCol.Tab, new(SemanticMeaning.Neutral, Priority.MediumLow)},
-			{ ImGuiCol.TabHovered, new(SemanticMeaning.Neutral, Priority.Medium)},
-			{ ImGuiCol.TabSelected, new(SemanticMeaning.Neutral, Priority.High)},
+			{ ImGuiCol.TabSelected, new(SemanticMeaning.Primary, Priority.MediumHigh)},
+			{ ImGuiCol.TabHovered, new(SemanticMeaning.Primary, Priority.High)},
 
 			{ ImGuiCol.PlotLines, new(SemanticMeaning.Alternate, Priority.Medium)},
 			{ ImGuiCol.PlotLinesHovered, new(SemanticMeaning.Alternate, Priority.MediumHigh)},
@@ -68,16 +69,16 @@ public sealed class ImGuiPaletteMapper : IPaletteMapper<ImGuiCol, Vector4>
 			{ ImGuiCol.PlotHistogram, new(SemanticMeaning.Alternate, Priority.Medium)},
 			{ ImGuiCol.PlotHistogramHovered, new(SemanticMeaning.Alternate, Priority.MediumHigh)},
 
-			{ ImGuiCol.TableHeaderBg, new(SemanticMeaning.Primary, Priority.Medium)},
-			{ ImGuiCol.TableBorderStrong, new(SemanticMeaning.Neutral, Priority.MediumHigh)},
-			{ ImGuiCol.TableBorderLight, new(SemanticMeaning.Neutral, Priority.MediumLow)},
+			{ ImGuiCol.TableHeaderBg, new(SemanticMeaning.Primary, Priority.MediumHigh)},
+			{ ImGuiCol.TableBorderStrong, new(SemanticMeaning.Neutral, Priority.High)},
+			{ ImGuiCol.TableBorderLight, new(SemanticMeaning.Neutral, Priority.Medium)},
 			{ ImGuiCol.TableRowBg, new(SemanticMeaning.Neutral, Priority.Low) },
 			{ ImGuiCol.TableRowBgAlt, new(SemanticMeaning.Neutral, Priority.MediumLow) },
 
 			{ ImGuiCol.TextSelectedBg, new(SemanticMeaning.Alternate, Priority.Medium) },
 
 			{ ImGuiCol.TitleBg, new(SemanticMeaning.Neutral, Priority.Medium)},
-			{ ImGuiCol.TitleBgActive, new(SemanticMeaning.Primary, Priority.Medium)},
+			{ ImGuiCol.TitleBgActive, new(SemanticMeaning.Primary, Priority.MediumHigh)},
 			{ ImGuiCol.TitleBgCollapsed, new(SemanticMeaning.Neutral, Priority.MediumLow)},
 
 			{ ImGuiCol.Border, new(SemanticMeaning.Neutral, Priority.Medium) },

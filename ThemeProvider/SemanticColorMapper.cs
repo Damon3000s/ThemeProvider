@@ -10,14 +10,14 @@ using System.Collections.ObjectModel;
 using System.Linq;
 
 /// <summary>
-/// Maps semantic color requests to actual colors by interpolating within available color ranges
-/// based on priority levels for each semantic meaning.
+/// Maps semantic color requests to actual colors using a global lightness-based priority system.
+/// All colors with the same priority across different semantic meanings will have similar lightness levels.
 /// </summary>
 public sealed class SemanticColorMapper
 {
 	/// <summary>
 	/// Maps a collection of semantic color requests to actual colors using the provided theme.
-	/// Colors are interpolated within each semantic's available range based on priority levels.
+	/// Uses a global lightness range divided by priority levels to ensure consistent visual hierarchy.
 	/// </summary>
 	/// <param name="requests">The collection of semantic color requests to map</param>
 	/// <param name="theme">The semantic theme providing available colors for each meaning</param>
@@ -35,148 +35,231 @@ public sealed class SemanticColorMapper
 			return ImmutableDictionary<SemanticColorRequest, PerceptualColor>.Empty;
 		}
 
+		// Calculate the global lightness range across all semantic meanings
+		(float minLightness, float maxLightness) = CalculateGlobalLightnessRange(theme);
+
+		// Get all unique priority levels from the requests
+		List<Priority> uniquePriorities = [.. requestsList
+			.Select(r => r.Priority)
+			.Distinct()
+			.OrderBy(p => p)];
+
+		// Create a mapping of priority to target lightness
+		Dictionary<Priority, float> priorityToLightness = CalculatePriorityLightnessMapping(
+			uniquePriorities, minLightness, maxLightness, theme.IsDarkTheme);
+
 		Dictionary<SemanticColorRequest, PerceptualColor> result = [];
 
-		// Group requests by semantic meaning
-		List<IGrouping<SemanticMeaning, SemanticColorRequest>> requestsByMeaning = [.. requestsList
-			.GroupBy(request => request.Meaning)];
-
-		foreach (IGrouping<SemanticMeaning, SemanticColorRequest> meaningGroup in requestsByMeaning)
+		// Process each request
+		foreach (SemanticColorRequest request in requestsList)
 		{
-			SemanticMeaning meaning = meaningGroup.Key;
-			List<SemanticColorRequest> requestsForMeaning = [.. meaningGroup.OrderBy(r => r.Priority)];
-
 			// Get available colors for this semantic meaning
-			if (!theme.SemanticMapping.TryGetValue(meaning, out Collection<PerceptualColor>? availableColors) ||
+			if (!theme.SemanticMapping.TryGetValue(request.Meaning, out Collection<PerceptualColor>? availableColors) ||
 				availableColors.Count == 0)
 			{
 				continue; // Skip if no colors available for this meaning
 			}
 
-			// Map colors for this semantic meaning
-			Dictionary<SemanticColorRequest, PerceptualColor> mappedColors = MapColorsForSemantic(requestsForMeaning, availableColors, theme.IsDarkTheme);
+			// Get the target lightness for this priority
+			float targetLightness = priorityToLightness[request.Priority];
 
-			foreach ((SemanticColorRequest request, PerceptualColor color) in mappedColors)
-			{
-				result[request] = color;
-			}
+			// Find the closest color by lightness within this semantic meaning
+			PerceptualColor bestColor = InterpolateToTargetLightness(availableColors, targetLightness);
+
+			result[request] = bestColor;
 		}
 
 		return result.ToImmutableDictionary();
 	}
 
 	/// <summary>
-	/// Maps colors for a specific semantic meaning by interpolating across the available color range
-	/// based on priority distribution.
+	/// Calculates the global lightness range across all colors in all semantic meanings.
 	/// </summary>
-	private static Dictionary<SemanticColorRequest, PerceptualColor> MapColorsForSemantic(
-		List<SemanticColorRequest> requests,
-		Collection<PerceptualColor> availableColors,
+	private static (float min, float max) CalculateGlobalLightnessRange(ISemanticTheme theme)
+	{
+		float minLightness = float.MaxValue;
+		float maxLightness = float.MinValue;
+
+		foreach ((SemanticMeaning meaning, Collection<PerceptualColor> colors) in theme.SemanticMapping)
+		{
+			foreach (PerceptualColor color in colors)
+			{
+				if (color.Lightness < minLightness)
+				{
+					minLightness = color.Lightness;
+				}
+				if (color.Lightness > maxLightness)
+				{
+					maxLightness = color.Lightness;
+				}
+			}
+		}
+
+		// Ensure we have a valid range
+		if (minLightness == float.MaxValue || maxLightness == float.MinValue)
+		{
+			return (0.0f, 1.0f); // Fallback range
+		}
+
+		return (minLightness, maxLightness);
+	}
+
+	/// <summary>
+	/// Creates a mapping from priority levels to target lightness values by dividing
+	/// the global lightness range according to the priority levels.
+	/// </summary>
+	private static Dictionary<Priority, float> CalculatePriorityLightnessMapping(
+		List<Priority> priorities,
+		float minLightness,
+		float maxLightness,
 		bool isDarkTheme)
 	{
-		Dictionary<SemanticColorRequest, PerceptualColor> result = [];
+		Dictionary<Priority, float> result = [];
 
-		if (requests.Count == 0 || availableColors.Count == 0)
+		if (priorities.Count == 0)
 		{
 			return result;
 		}
 
-		// If only one color available, assign it to all requests
-		if (availableColors.Count == 1)
+		if (priorities.Count == 1)
 		{
-			PerceptualColor singleColor = availableColors.First();
-			foreach (SemanticColorRequest request in requests)
-			{
-				result[request] = singleColor;
-			}
+			// Single priority gets the middle of the range
+			result[priorities[0]] = (minLightness + maxLightness) / 2.0f;
 			return result;
 		}
 
-		// Calculate color range bounds
-		ColorRange colorRange = CalculateColorRange(availableColors, isDarkTheme);
+		float lightnessRange = maxLightness - minLightness;
 
-		// Get unique priority levels in order
-		List<Priority> uniquePriorities = [.. requests
-			.Select(r => r.Priority)
-			.Distinct()
-			.OrderBy(p => p)];
-
-		// If only one priority level, use the middle of the range
-		if (uniquePriorities.Count == 1)
+		// For dark themes, higher priority should be lighter (more visible)
+		// For light themes, higher priority should be darker (more visible)
+		for (int i = 0; i < priorities.Count; i++)
 		{
-			PerceptualColor middleColor = InterpolateInRange(colorRange, t: 0.5f);
-			foreach (SemanticColorRequest request in requests)
-			{
-				result[request] = middleColor;
-			}
-			return result;
-		}
+			Priority priority = priorities[i];
 
-		// Map each priority to a position along the color range
-		for (int i = 0; i < uniquePriorities.Count; i++)
-		{
-			Priority priority = uniquePriorities[i];
-			float t = uniquePriorities.Count == 1 ? 0.5f : i / (float)(uniquePriorities.Count - 1);
-			PerceptualColor interpolatedColor = InterpolateInRange(colorRange, t);
+			// Calculate position in range (0.0 to 1.0)
+			float position = priorities.Count == 1 ? 0.5f : i / (float)(priorities.Count - 1);
 
-			// Assign this color to all requests with this priority
-			foreach (SemanticColorRequest request in requests.Where(r => r.Priority == priority))
+			float targetLightness;
+			if (isDarkTheme)
 			{
-				result[request] = interpolatedColor;
+				// In dark themes, higher priority (later in enum) gets higher lightness
+				targetLightness = minLightness + (position * lightnessRange);
 			}
+			else
+			{
+				// In light themes, higher priority (later in enum) gets lower lightness
+				targetLightness = maxLightness - (position * lightnessRange);
+			}
+
+			result[priority] = Math.Clamp(targetLightness, 0.0f, 1.0f);
 		}
 
 		return result;
 	}
 
 	/// <summary>
-	/// Calculates the color range from available colors by finding the extremes
-	/// in perceptual color space, ordered appropriately for the theme type.
+	/// Creates a color with the target lightness by interpolating or extrapolating from available colors.
+	/// Preserves hue and chroma characteristics while achieving the exact lightness needed for priority hierarchy.
 	/// </summary>
-	private static ColorRange CalculateColorRange(Collection<PerceptualColor> colors, bool isDarkTheme)
+	private static PerceptualColor InterpolateToTargetLightness(
+		Collection<PerceptualColor> availableColors,
+		float targetLightness)
 	{
-		List<PerceptualColor> colorsList = [.. colors];
-
-		if (colorsList.Count == 1)
+		if (availableColors.Count == 0)
 		{
-			return new ColorRange(colorsList[0], colorsList[0]);
+			throw new ArgumentException("No colors available", nameof(availableColors));
 		}
 
-		// Find the two colors with maximum perceptual distance
-		float maxDistance = 0f;
-		PerceptualColor rangeStart = colorsList[0];
-		PerceptualColor rangeEnd = colorsList[0];
-
-		for (int i = 0; i < colorsList.Count; i++)
+		if (availableColors.Count == 1)
 		{
-			for (int j = i + 1; j < colorsList.Count; j++)
-			{
-				float distance = colorsList[i].SemanticDistanceTo(colorsList[j]);
-				if (distance > maxDistance)
-				{
-					maxDistance = distance;
-					rangeStart = colorsList[i];
-					rangeEnd = colorsList[j];
-				}
-			}
+			// Single color - extrapolate by adjusting lightness while preserving hue and chroma
+			return ExtrapolateColorToLightness(availableColors.First(), targetLightness);
 		}
 
-		// Use the theme-aware ordering
-		return ColorRange.FromColors(rangeStart, rangeEnd, isDarkTheme);
+		// Multiple colors - find the best interpolation or extrapolation
+		List<PerceptualColor> colorsList = [.. availableColors.OrderBy(c => c.Lightness)];
+
+		float minLightness = colorsList.First().Lightness;
+		float maxLightness = colorsList.Last().Lightness;
+
+		// If target is within the range, interpolate between the closest colors
+		if (targetLightness >= minLightness && targetLightness <= maxLightness)
+		{
+			return InterpolateBetweenColors(colorsList, targetLightness);
+		}
+
+		// If target is outside the range, extrapolate from the closest end
+		if (targetLightness < minLightness)
+		{
+			// Extrapolate from the darkest color
+			return ExtrapolateColorToLightness(colorsList.First(), targetLightness);
+		}
+		else
+		{
+			// Extrapolate from the lightest color
+			return ExtrapolateColorToLightness(colorsList.Last(), targetLightness);
+		}
 	}
 
 	/// <summary>
-	/// Interpolates between the start and end colors of a range using the given parameter.
+	/// Extrapolates a single color to a target lightness while preserving its hue and chroma.
 	/// </summary>
-	private static PerceptualColor InterpolateInRange(ColorRange range, float t)
+	private static PerceptualColor ExtrapolateColorToLightness(PerceptualColor baseColor, float targetLightness)
 	{
+		// Work in Oklab space for perceptually uniform lightness adjustment
+		OklabColor oklab = baseColor.OklabValue;
+
+		// Create new color with target lightness but same chroma (a, b)
+		OklabColor targetOklab = new(
+			L: Math.Clamp(targetLightness, 0.0f, 1.0f),
+			A: oklab.A,
+			B: oklab.B
+		);
+
+		// Convert back to RGB
+		RgbColor targetRgb = ColorMath.OklabToRgb(targetOklab);
+
+		// Clamp RGB values to valid range
+		targetRgb = new RgbColor(
+			Math.Clamp(targetRgb.R, 0f, 1f),
+			Math.Clamp(targetRgb.G, 0f, 1f),
+			Math.Clamp(targetRgb.B, 0f, 1f)
+		);
+
+		return new PerceptualColor(targetRgb);
+	}
+
+	/// <summary>
+	/// Interpolates between colors in a sorted list to achieve a target lightness.
+	/// </summary>
+	private static PerceptualColor InterpolateBetweenColors(List<PerceptualColor> sortedColors, float targetLightness)
+	{
+		// Find the two colors that bracket the target lightness
+		PerceptualColor lowerColor = sortedColors[0];
+		PerceptualColor upperColor = sortedColors[^1];
+
+		for (int i = 0; i < sortedColors.Count - 1; i++)
+		{
+			if (targetLightness >= sortedColors[i].Lightness && targetLightness <= sortedColors[i + 1].Lightness)
+			{
+				lowerColor = sortedColors[i];
+				upperColor = sortedColors[i + 1];
+				break;
+			}
+		}
+
+		// Calculate interpolation factor
+		float lightnessRange = upperColor.Lightness - lowerColor.Lightness;
+		float t = lightnessRange == 0 ? 0.5f : (targetLightness - lowerColor.Lightness) / lightnessRange;
 		t = Math.Clamp(t, 0f, 1f);
 
+		// Interpolate in Oklab space
 		OklabColor interpolatedOklab = OklabColor.Lerp(
-			range.Start.OklabValue,
-			range.End.OklabValue,
+			lowerColor.OklabValue,
+			upperColor.OklabValue,
 			t);
 
+		// Convert back to RGB
 		RgbColor interpolatedRgb = ColorMath.OklabToRgb(interpolatedOklab);
 
 		// Clamp RGB values to valid range

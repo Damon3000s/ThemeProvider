@@ -1,5 +1,3 @@
 ﻿<Project Sdk="ktsu.Sdk.Lib">
-  <ItemGroup>
-    <Folder Include="Core\" />
-  </ItemGroup>
+
 </Project>
