@@ -46,28 +46,18 @@ public class GruvboxDark : ISemanticTheme
 	public static Collection<PerceptualColor> Neutrals =>
 	[
 		Light1,      // Lightest
-		Light2,
-		Light3,
-		Light4,
-		Gray,
-		Dark4,
-		Dark3,
-		Dark2,
-		Dark1,
-		Dark0Soft,
-		Dark0,
 		DarkHard,    // Darkest
 	];
 
 	public Dictionary<SemanticMeaning, Collection<PerceptualColor>> SemanticMapping => new()
 	{
 		[SemanticMeaning.Neutral] = Neutrals,
-		[SemanticMeaning.Primary] = [BrightBlue],
+		[SemanticMeaning.Primary] = [BrightOrange],
 		[SemanticMeaning.Alternate] = [BrightPurple],
 		[SemanticMeaning.Success] = [BrightGreen],
 		[SemanticMeaning.CallToAction] = [BrightGreen],
 		[SemanticMeaning.Information] = [BrightAqua],
-		[SemanticMeaning.Caution] = [BrightOrange],
+		[SemanticMeaning.Caution] = [BrightBlue],
 		[SemanticMeaning.Warning] = [BrightYellow],
 		[SemanticMeaning.Error] = [BrightRed],
 		[SemanticMeaning.Failure] = [BrightRed],

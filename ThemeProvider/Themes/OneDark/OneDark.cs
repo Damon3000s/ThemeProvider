@@ -34,14 +34,6 @@ public class OneDark : ISemanticTheme
 	public static Collection<PerceptualColor> Neutrals =>
 	[
 		White,         // Lightest
-		Foreground,
-		Comment,
-		SpecialGray,
-		VisualGray,
-		Selection,
-		CursorLine,
-		Background,
-		VertSplit,
 		Black,         // Darkest
 	];
 

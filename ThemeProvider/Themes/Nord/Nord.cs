@@ -40,22 +40,17 @@ public class Nord : ISemanticTheme
 	public static Collection<PerceptualColor> Neutrals =>
 	[
 		Nord6, // Lightest
-		Nord5,
-		Nord4,
-		Nord3,
-		Nord2,
-		Nord1,
 		Nord0, // Darkest
 	];
 
 	public Dictionary<SemanticMeaning, Collection<PerceptualColor>> SemanticMapping => new()
 	{
 		[SemanticMeaning.Neutral] = Neutrals,
-		[SemanticMeaning.Primary] = [Nord10], // Main blue
+		[SemanticMeaning.Primary] = [Nord8], // Signature cyan
 		[SemanticMeaning.Alternate] = [Nord15], // Purple
 		[SemanticMeaning.Success] = [Nord14], // Green
 		[SemanticMeaning.CallToAction] = [Nord14], // Green
-		[SemanticMeaning.Information] = [Nord8], // Cyan
+		[SemanticMeaning.Information] = [Nord10], // Darker blue
 		[SemanticMeaning.Caution] = [Nord12], // Orange
 		[SemanticMeaning.Warning] = [Nord13], // Yellow
 		[SemanticMeaning.Error] = [Nord11], // Red

@@ -34,10 +34,6 @@ public class VSCodeLight : ISemanticTheme
 	public static Collection<PerceptualColor> Neutrals =>
 	[
 		Foreground,         // Darkest (for text in light theme)
-		Comment,
-		LineHighlight,
-		Selection,
-		SidebarBackground,
 		Background,         // Lightest (for backgrounds in light theme)
 	];
 

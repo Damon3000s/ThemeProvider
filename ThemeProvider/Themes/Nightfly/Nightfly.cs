@@ -35,14 +35,6 @@ public class Nightfly : ISemanticTheme
 	public static Collection<PerceptualColor> Neutrals =>
 	[
 		White,       // Lightest
-		Foreground,
-		Gray5,
-		Gray4,
-		Gray3,
-		Comment,
-		Selection,
-		Gray2,
-		Gray1,
 		Background,  // Darkest
 	];
 

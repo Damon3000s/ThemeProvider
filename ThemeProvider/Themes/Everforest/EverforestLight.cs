@@ -39,29 +39,19 @@ public class EverforestLight : ISemanticTheme
 	public static Collection<PerceptualColor> Neutrals =>
 	[
 		Fg,          // Darkest (for text in light theme)
-		StatuslineB,
-		Grey2,
-		Grey1,
-		Grey0,
-		Bg5,
-		Bg4,
-		Bg3,
-		Bg2,
-		Bg1,
-		Bg0,
 		BgDim,       // Lightest (for backgrounds in light theme)
 	];
 
 	public Dictionary<SemanticMeaning, Collection<PerceptualColor>> SemanticMapping => new()
 	{
 		[SemanticMeaning.Neutral] = Neutrals,
-		[SemanticMeaning.Primary] = [Blue],
-		[SemanticMeaning.Alternate] = [Purple],
-		[SemanticMeaning.Success] = [Green],
-		[SemanticMeaning.CallToAction] = [Green],
-		[SemanticMeaning.Information] = [Aqua],
-		[SemanticMeaning.Caution] = [Orange],
-		[SemanticMeaning.Warning] = [Yellow],
+		[SemanticMeaning.Primary] = [Green],
+		[SemanticMeaning.Alternate] = [Orange],
+		[SemanticMeaning.Success] = [Blue],
+		[SemanticMeaning.CallToAction] = [Aqua],
+		[SemanticMeaning.Information] = [Purple],
+		[SemanticMeaning.Caution] = [Yellow],
+		[SemanticMeaning.Warning] = [Red],
 		[SemanticMeaning.Error] = [Red],
 		[SemanticMeaning.Failure] = [Red],
 		[SemanticMeaning.Debug] = [Purple]

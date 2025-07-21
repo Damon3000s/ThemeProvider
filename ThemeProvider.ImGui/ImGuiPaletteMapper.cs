@@ -79,7 +79,7 @@ public sealed class ImGuiPaletteMapper : IPaletteMapper<ImGuiCol, Vector4>
 			{ ImGuiCol.PlotHistogramHovered, new(SemanticMeaning.Alternate, Priority.MediumHigh)},
 
 			{ ImGuiCol.TableHeaderBg, new(SemanticMeaning.Primary, Priority.MediumLow)},
-			{ ImGuiCol.TableBorderStrong, new(SemanticMeaning.Neutral, Priority.High)},
+			{ ImGuiCol.TableBorderStrong, new(SemanticMeaning.Neutral, Priority.Medium)},
 			{ ImGuiCol.TableBorderLight, new(SemanticMeaning.Neutral, Priority.Medium)},
 			{ ImGuiCol.TableRowBg, new(SemanticMeaning.Neutral, Priority.Low) },
 			{ ImGuiCol.TableRowBgAlt, new(SemanticMeaning.Neutral, Priority.MediumLow) },

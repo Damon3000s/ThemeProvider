@@ -29,9 +29,6 @@ public class Monokai : ISemanticTheme
 	public static Collection<PerceptualColor> Neutrals =>
 	[
 		Foreground,    // Lightest
-		Comment,
-		Selection,
-		CurrentLine,
 		Background,    // Darkest
 	];
 

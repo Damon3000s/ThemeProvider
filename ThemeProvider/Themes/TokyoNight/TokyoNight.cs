@@ -45,13 +45,6 @@ public class TokyoNight : ISemanticTheme
 	public static Collection<PerceptualColor> Neutrals =>
 	[
 		Foreground,         // Lightest
-		ForegroundDark,
-		Dark5,
-		Comment,
-		Dark3,
-		ForegroundGutter,
-		BackgroundHighlight,
-		Terminal,
 		Background,         // Darkest
 	];
 

@@ -41,16 +41,6 @@ public class Macchiato : ISemanticTheme
 	public static Collection<PerceptualColor> Neutrals =>
 	[
 		Text,
-		Subtext1,
-		Subtext0,
-		Overlay2,
-		Overlay1,
-		Overlay0,
-		Surface2,
-		Surface1,
-		Surface0,
-		Base,
-		Mantle,
 		Crust,
 	];
 
