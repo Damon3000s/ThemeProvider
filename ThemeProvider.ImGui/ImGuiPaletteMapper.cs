@@ -43,12 +43,13 @@ public sealed class ImGuiPaletteMapper : IPaletteMapper<ImGuiCol, Vector4>
 			{ ImGuiCol.ScrollbarGrabHovered, new(SemanticMeaning.Neutral, Priority.MediumHigh)},
 			{ ImGuiCol.ScrollbarGrabActive, new(SemanticMeaning.Neutral, Priority.High)},
 
-			{ ImGuiCol.Button, new(SemanticMeaning.Primary, Priority.MediumHigh)},
-			{ ImGuiCol.ButtonHovered, new(SemanticMeaning.Primary, Priority.High)},
+			// Primary elements now use more spread out priorities to maximize contrast within the 50-90% range
+			{ ImGuiCol.Button, new(SemanticMeaning.Primary, Priority.Low)},
+			{ ImGuiCol.ButtonHovered, new(SemanticMeaning.Primary, Priority.MediumHigh)},
 			{ ImGuiCol.ButtonActive, new(SemanticMeaning.Primary, Priority.VeryHigh)},
 
-			{ ImGuiCol.Header, new(SemanticMeaning.Primary, Priority.MediumHigh)},
-			{ ImGuiCol.HeaderHovered, new(SemanticMeaning.Primary, Priority.High)},
+			{ ImGuiCol.Header, new(SemanticMeaning.Primary, Priority.Low)},
+			{ ImGuiCol.HeaderHovered, new(SemanticMeaning.Primary, Priority.MediumHigh)},
 			{ ImGuiCol.HeaderActive, new(SemanticMeaning.Primary, Priority.VeryHigh)},
 
 			{ ImGuiCol.CheckMark, new(SemanticMeaning.Primary, Priority.High)},
@@ -59,7 +60,7 @@ public sealed class ImGuiPaletteMapper : IPaletteMapper<ImGuiCol, Vector4>
 
 			{ ImGuiCol.NavWindowingHighlight, new(SemanticMeaning.Primary, Priority.VeryHigh)},
 
-			{ ImGuiCol.SliderGrab, new(SemanticMeaning.Primary, Priority.MediumHigh)},
+			{ ImGuiCol.SliderGrab, new(SemanticMeaning.Primary, Priority.MediumLow)},
 			{ ImGuiCol.SliderGrabActive, new(SemanticMeaning.Primary, Priority.High)},
 
 			{ ImGuiCol.Separator, new(SemanticMeaning.Neutral, Priority.MediumHigh)},
@@ -67,16 +68,17 @@ public sealed class ImGuiPaletteMapper : IPaletteMapper<ImGuiCol, Vector4>
 			{ ImGuiCol.SeparatorActive, new(SemanticMeaning.Neutral, Priority.VeryHigh)},
 
 			{ ImGuiCol.Tab, new(SemanticMeaning.Neutral, Priority.MediumLow)},
-			{ ImGuiCol.TabSelected, new(SemanticMeaning.Primary, Priority.MediumHigh)},
-			{ ImGuiCol.TabHovered, new(SemanticMeaning.Primary, Priority.High)},
+			{ ImGuiCol.TabSelected, new(SemanticMeaning.Primary, Priority.Medium)},
+			{ ImGuiCol.TabHovered, new(SemanticMeaning.Primary, Priority.MediumHigh)},
 
-			{ ImGuiCol.PlotLines, new(SemanticMeaning.Alternate, Priority.Medium)},
-			{ ImGuiCol.PlotLinesHovered, new(SemanticMeaning.Alternate, Priority.MediumHigh)},
+			// Alternate elements spread across the full 50-90% range for better contrast
+			{ ImGuiCol.PlotLines, new(SemanticMeaning.Alternate, Priority.VeryLow)},
+			{ ImGuiCol.PlotLinesHovered, new(SemanticMeaning.Alternate, Priority.Medium)},
 
-			{ ImGuiCol.PlotHistogram, new(SemanticMeaning.Alternate, Priority.Medium)},
+			{ ImGuiCol.PlotHistogram, new(SemanticMeaning.Alternate, Priority.Low)},
 			{ ImGuiCol.PlotHistogramHovered, new(SemanticMeaning.Alternate, Priority.MediumHigh)},
 
-			{ ImGuiCol.TableHeaderBg, new(SemanticMeaning.Primary, Priority.MediumHigh)},
+			{ ImGuiCol.TableHeaderBg, new(SemanticMeaning.Primary, Priority.MediumLow)},
 			{ ImGuiCol.TableBorderStrong, new(SemanticMeaning.Neutral, Priority.High)},
 			{ ImGuiCol.TableBorderLight, new(SemanticMeaning.Neutral, Priority.Medium)},
 			{ ImGuiCol.TableRowBg, new(SemanticMeaning.Neutral, Priority.Low) },
@@ -85,7 +87,7 @@ public sealed class ImGuiPaletteMapper : IPaletteMapper<ImGuiCol, Vector4>
 			{ ImGuiCol.TextSelectedBg, new(SemanticMeaning.Alternate, Priority.High) },
 
 			{ ImGuiCol.TitleBg, new(SemanticMeaning.Neutral, Priority.Medium)},
-			{ ImGuiCol.TitleBgActive, new(SemanticMeaning.Primary, Priority.MediumHigh)},
+			{ ImGuiCol.TitleBgActive, new(SemanticMeaning.Primary, Priority.Medium)},
 			{ ImGuiCol.TitleBgCollapsed, new(SemanticMeaning.Neutral, Priority.MediumLow)},
 
 			{ ImGuiCol.Border, new(SemanticMeaning.Neutral, Priority.Medium) },
