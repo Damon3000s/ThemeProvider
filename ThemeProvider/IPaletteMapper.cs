@@ -2,9 +2,8 @@
 // All rights reserved.
 // Licensed under the MIT license.
 
-namespace ktsu.ThemeProvider.Output;
+namespace ktsu.ThemeProvider;
 using System.Collections.Immutable;
-using ktsu.ThemeProvider.Themes;
 
 /// <summary>
 /// Interface for mapping semantic themes to UI framework-specific color palettes.
@@ -25,21 +24,5 @@ public interface IPaletteMapper<TColorKey, TColorValue>
 	/// </summary>
 	/// <param name="theme">The semantic theme to map from</param>
 	/// <returns>A dictionary mapping framework color keys to color values</returns>
-	public ImmutableDictionary<TColorKey, TColorValue> MapTheme(ThemeDefinition theme);
-
-	/// <summary>
-	/// Gets the default/fallback color for a specific framework color key when
-	/// the semantic theme doesn't provide an appropriate mapping.
-	/// </summary>
-	/// <param name="colorKey">The framework color key</param>
-	/// <returns>The default color value for this key</returns>
-	public TColorValue GetDefaultColor(TColorKey colorKey);
-
-	/// <summary>
-	/// Gets metadata about the mapping, such as which semantic specs were used
-	/// for each framework color.
-	/// </summary>
-	/// <param name="theme">The theme that was mapped</param>
-	/// <returns>Metadata about the mapping process</returns>
-	public ImmutableDictionary<string, object> GetMappingMetadata(ThemeDefinition theme);
+	public ImmutableDictionary<TColorKey, TColorValue> MapTheme(ISemanticTheme theme);
 }

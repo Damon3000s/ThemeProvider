@@ -23,7 +23,7 @@ internal static class Program
 	// UI State
 	private static int selectedSemanticMeaning = (int)SemanticMeaning.Primary;
 	private static int selectedVisualRole = (int)VisualRole.Surface;
-	private static int selectedImportance = (int)ImportanceLevel.Medium;
+	private static int selectedImportance = (int)Priority.Medium;
 	private static Vector3 selectedColorVec = Vector3.Zero;
 	private static Vector3 backgroundColorVec = new(0.1f, 0.1f, 0.1f);
 	private static bool isLargeText;
@@ -55,13 +55,13 @@ internal static class Program
 
 	private static void OnStart()
 	{
-		theme = CatppuccinMocha.CreateTheme();
+		theme = Mocha.CreateTheme();
 		paletteEngine = new SemanticPaletteEngine(theme);
 		imguiMapper = new ImGuiPaletteMapper();
 
 		// Initialize with theme's primary text color
-		SemanticColorSpec textSpec = new(SemanticMeaning.Primary, VisualRole.Text, ImportanceLevel.Critical);
-		if (theme.TryGetColor(textSpec, out ColorProperties textColor))
+		SemanticColorRequest textSpec = new(SemanticMeaning.Primary, VisualRole.Text, Priority.Critical);
+		if (theme.TryGetColor(textSpec, out PerceptualColor textColor))
 		{
 			selectedColorVec = new Vector3(textColor.RgbValue.R, textColor.RgbValue.G, textColor.RgbValue.B);
 		}
@@ -147,10 +147,10 @@ internal static class Program
 		ImGui.TextUnformatted("Color Specifications:");
 
 		// Group colors by visual role for better organization
-		Dictionary<VisualRole, List<(SemanticColorSpec spec, ColorProperties color)>> roleGroups = [];
-		foreach ((SemanticColorSpec spec, ColorProperties color) in theme.Colors)
+		Dictionary<VisualRole, List<(SemanticColorRequest spec, PerceptualColor color)>> roleGroups = [];
+		foreach ((SemanticColorRequest spec, PerceptualColor color) in theme.Colors)
 		{
-			if (!roleGroups.TryGetValue(spec.Role, out List<(SemanticColorSpec spec, ColorProperties color)>? group))
+			if (!roleGroups.TryGetValue(spec.Role, out List<(SemanticColorRequest spec, PerceptualColor color)>? group))
 			{
 				group = [];
 				roleGroups[spec.Role] = group;
@@ -159,7 +159,7 @@ internal static class Program
 		}
 
 		float colorSize = 40f;
-		foreach ((VisualRole role, List<(SemanticColorSpec spec, ColorProperties color)> colors) in roleGroups.OrderBy(kvp => (int)kvp.Key))
+		foreach ((VisualRole role, List<(SemanticColorRequest spec, PerceptualColor color)> colors) in roleGroups.OrderBy(kvp => (int)kvp.Key))
 		{
 			if (ImGui.CollapsingHeader($"{role} Colors ({colors.Count})"))
 			{
@@ -167,7 +167,7 @@ internal static class Program
 				if (ImGui.BeginTable($"{role}Table", columns * 2, ImGuiTableFlags.None)) // 2 columns per color (swatch + info)
 				{
 					int itemCount = 0;
-					foreach ((SemanticColorSpec spec, ColorProperties color) in colors.OrderBy(x => (int)x.spec.Meaning).ThenBy(x => (int)x.spec.Importance))
+					foreach ((SemanticColorRequest spec, PerceptualColor color) in colors.OrderBy(x => (int)x.spec.Meaning).ThenBy(x => (int)x.spec.Importance))
 					{
 						if (itemCount % columns == 0)
 						{
@@ -194,9 +194,6 @@ internal static class Program
 							ImGui.BeginTooltip();
 							ImGui.TextUnformatted($"{spec}");
 							ImGui.TextUnformatted($"Hex: {color.RgbValue.ToHex()}");
-							ImGui.TextUnformatted($"Temperature: {color.Temperature:F2}");
-							ImGui.TextUnformatted($"Energy: {color.Energy:F2}");
-							ImGui.TextUnformatted($"Weight: {color.Weight:F2}");
 							ImGui.EndTooltip();
 						}
 
@@ -229,21 +226,21 @@ internal static class Program
 		string[] roleNames = Enum.GetNames<VisualRole>();
 		ImGui.Combo("Visual Role", ref selectedVisualRole, roleNames, roleNames.Length);
 
-		string[] importanceNames = Enum.GetNames<ImportanceLevel>();
+		string[] importanceNames = Enum.GetNames<Priority>();
 		ImGui.Combo("Importance Level", ref selectedImportance, importanceNames, importanceNames.Length);
 
 		// Build the current spec
-		SemanticColorSpec currentSpec = new(
+		SemanticColorRequest currentSpec = new(
 			(SemanticMeaning)selectedSemanticMeaning,
 			(VisualRole)selectedVisualRole,
-			(ImportanceLevel)selectedImportance
+			(Priority)selectedImportance
 		);
 
 		ImGui.Separator();
 		ImGui.TextUnformatted($"Current Specification: {currentSpec}");
 
 		// Display the color if it exists in the theme
-		if (theme.TryGetColor(currentSpec, out ColorProperties color))
+		if (theme.TryGetColor(currentSpec, out PerceptualColor color))
 		{
 			// Color preview
 			float previewSize = 150f;
@@ -267,12 +264,8 @@ internal static class Program
 			ImGui.TextUnformatted($"Oklab: L={oklab.L:F3}, a={oklab.A:F3}, b={oklab.B:F3}");
 
 			ImGui.Separator();
-			ImGui.TextUnformatted("Semantic Properties:");
-			ImGui.TextUnformatted($"Weight: {color.Weight:F2}");
-			ImGui.TextUnformatted($"Temperature: {color.Temperature:F2} ({(color.Temperature > 0 ? "Warm" : "Cool")})");
-			ImGui.TextUnformatted($"Energy: {color.Energy:F2}");
-			ImGui.TextUnformatted($"Formality: {color.Formality:F2}");
-			ImGui.TextUnformatted($"Accessibility Priority: {color.AccessibilityPriority:F2}");
+			ImGui.TextUnformatted("Color Properties:");
+			ImGui.TextUnformatted($"Oklab: L={color.OklabValue.L:F2}, A={color.OklabValue.A:F2}, B={color.OklabValue.B:F2}");
 
 			ImGui.EndGroup();
 		}
@@ -281,8 +274,8 @@ internal static class Program
 			ImGui.TextUnformatted("This specification is not defined in the current theme.");
 
 			// Show closest match
-			(SemanticColorSpec closestSpec, ColorProperties closestColor) = theme.FindClosestColor(
-				ColorProperties.FromRgb(new RgbColor(0.5f, 0.5f, 0.5f), currentSpec)
+			(SemanticColorRequest closestSpec, PerceptualColor closestColor) = theme.FindClosestColor(
+				PerceptualColor.FromRgb(new RgbColor(0.5f, 0.5f, 0.5f))
 			);
 
 			ImGui.Separator();
@@ -329,14 +322,14 @@ internal static class Program
 	private static void GenerateSemanticPalette()
 	{
 		// Get base background color for contrast calculations
-		SemanticColorSpec baseSpec = new(SemanticMeaning.Primary, VisualRole.Background, ImportanceLevel.Low);
-		ColorProperties baseColor = theme.GetColor(baseSpec);
+		SemanticColorRequest baseSpec = new(SemanticMeaning.Primary, VisualRole.Background, Priority.Low);
+		PerceptualColor baseColor = theme.GetColor(baseSpec);
 
 		// Create a semantic graph with various color requests
 		SemanticColorGraph graph = SemanticColorGraph.CreateBuilder()
 			.AddRequest(new SemanticColorRequest
 			{
-				PrimarySpec = new(SemanticMeaning.CallToAction, VisualRole.Widget, ImportanceLevel.Critical),
+				PrimarySpec = new(SemanticMeaning.CallToAction, VisualRole.Widget, Priority.Critical),
 				DesiredTemperature = desiredTemperature,
 				DesiredEnergy = desiredEnergy,
 				DesiredFormality = desiredFormality,
@@ -346,7 +339,7 @@ internal static class Program
 			})
 			.AddRequest(new SemanticColorRequest
 			{
-				PrimarySpec = new(SemanticMeaning.Success, VisualRole.Text, ImportanceLevel.High),
+				PrimarySpec = new(SemanticMeaning.Success, VisualRole.Text, Priority.High),
 				DesiredTemperature = desiredTemperature * 0.5f,
 				DesiredEnergy = desiredEnergy,
 				DesiredFormality = desiredFormality,
@@ -356,7 +349,7 @@ internal static class Program
 			})
 			.AddRequest(new SemanticColorRequest
 			{
-				PrimarySpec = new(SemanticMeaning.Warning, VisualRole.Widget, ImportanceLevel.High),
+				PrimarySpec = new(SemanticMeaning.Warning, VisualRole.Widget, Priority.High),
 				DesiredTemperature = Math.Max(0.0f, desiredTemperature),
 				DesiredEnergy = Math.Max(0.6f, desiredEnergy),
 				DesiredFormality = desiredFormality,
@@ -366,7 +359,7 @@ internal static class Program
 			})
 			.AddRequest(new SemanticColorRequest
 			{
-				PrimarySpec = new(SemanticMeaning.Error, VisualRole.Text, ImportanceLevel.Critical),
+				PrimarySpec = new(SemanticMeaning.Error, VisualRole.Text, Priority.Critical),
 				DesiredTemperature = Math.Max(0.2f, desiredTemperature),
 				DesiredEnergy = Math.Max(0.7f, desiredEnergy),
 				DesiredFormality = desiredFormality,
@@ -376,7 +369,7 @@ internal static class Program
 			})
 			.AddRequest(new SemanticColorRequest
 			{
-				PrimarySpec = new(SemanticMeaning.Information, VisualRole.Surface, ImportanceLevel.Medium),
+				PrimarySpec = new(SemanticMeaning.Information, VisualRole.Surface, Priority.Medium),
 				DesiredTemperature = Math.Min(0.0f, desiredTemperature),
 				DesiredEnergy = desiredEnergy * 0.8f,
 				DesiredFormality = desiredFormality,
@@ -516,7 +509,7 @@ internal static class Program
 		ImGui.TextUnformatted("Semantic Buttons:");
 
 		// Call-to-action button
-		if (theme.TryGetColor(new(SemanticMeaning.CallToAction, VisualRole.Widget, ImportanceLevel.Critical), out ColorProperties ctaColor))
+		if (theme.TryGetColor(new(SemanticMeaning.CallToAction, VisualRole.Widget, Priority.Critical), out PerceptualColor ctaColor))
 		{
 			RgbColor buttonTextColor = GetContrastingTextColor(ctaColor.RgbValue);
 			ImGui.PushStyleColor(ImGuiCol.Button, ToImVec4(ctaColor.RgbValue));
@@ -531,7 +524,7 @@ internal static class Program
 		}
 
 		// Success button
-		if (theme.TryGetColor(new(SemanticMeaning.Success, VisualRole.Widget, ImportanceLevel.High), out ColorProperties successColor))
+		if (theme.TryGetColor(new(SemanticMeaning.Success, VisualRole.Widget, Priority.High), out PerceptualColor successColor))
 		{
 			RgbColor buttonTextColor = GetContrastingTextColor(successColor.RgbValue);
 			ImGui.PushStyleColor(ImGuiCol.Button, ToImVec4(successColor.RgbValue));
@@ -546,7 +539,7 @@ internal static class Program
 		}
 
 		// Error button
-		if (theme.TryGetColor(new(SemanticMeaning.Error, VisualRole.Widget, ImportanceLevel.Critical), out ColorProperties errorColor))
+		if (theme.TryGetColor(new(SemanticMeaning.Error, VisualRole.Widget, Priority.Critical), out PerceptualColor errorColor))
 		{
 			RgbColor buttonTextColor = GetContrastingTextColor(errorColor.RgbValue);
 			ImGui.PushStyleColor(ImGuiCol.Button, ToImVec4(errorColor.RgbValue));
@@ -572,21 +565,21 @@ internal static class Program
 		// Progress bars with semantic colors
 		ImGui.TextUnformatted("Progress Indicators:");
 
-		if (theme.TryGetColor(new(SemanticMeaning.Success, VisualRole.Widget, ImportanceLevel.High), out ColorProperties successWidget))
+		if (theme.TryGetColor(new(SemanticMeaning.Success, VisualRole.Widget, Priority.High), out PerceptualColor successWidget))
 		{
 			ImGui.PushStyleColor(ImGuiCol.PlotHistogram, ToImVec4(successWidget.RgbValue));
 			ImGui.ProgressBar(0.7f, new Vector2(0, 0), "70% Complete");
 			ImGui.PopStyleColor();
 		}
 
-		if (theme.TryGetColor(new(SemanticMeaning.Warning, VisualRole.Widget, ImportanceLevel.High), out ColorProperties warningWidget))
+		if (theme.TryGetColor(new(SemanticMeaning.Warning, VisualRole.Widget, Priority.High), out PerceptualColor warningWidget))
 		{
 			ImGui.PushStyleColor(ImGuiCol.PlotHistogram, ToImVec4(warningWidget.RgbValue));
 			ImGui.ProgressBar(0.4f, new Vector2(0, 0), "40% Warning");
 			ImGui.PopStyleColor();
 		}
 
-		if (theme.TryGetColor(new(SemanticMeaning.Error, VisualRole.Widget, ImportanceLevel.Critical), out ColorProperties errorWidget))
+		if (theme.TryGetColor(new(SemanticMeaning.Error, VisualRole.Widget, Priority.Critical), out PerceptualColor errorWidget))
 		{
 			ImGui.PushStyleColor(ImGuiCol.PlotHistogram, ToImVec4(errorWidget.RgbValue));
 			ImGui.ProgressBar(0.2f, new Vector2(0, 0), "20% Critical");
@@ -597,19 +590,19 @@ internal static class Program
 
 		// Semantic text
 		ImGui.TextUnformatted("Semantic Text:");
-		if (theme.TryGetColor(new(SemanticMeaning.Success, VisualRole.Text, ImportanceLevel.High), out ColorProperties successText))
+		if (theme.TryGetColor(new(SemanticMeaning.Success, VisualRole.Text, Priority.High), out PerceptualColor successText))
 		{
 			ImGui.TextColored(ToImVec4(successText.RgbValue), "Success: Operation completed successfully");
 		}
-		if (theme.TryGetColor(new(SemanticMeaning.Warning, VisualRole.Text, ImportanceLevel.High), out ColorProperties warningText))
+		if (theme.TryGetColor(new(SemanticMeaning.Warning, VisualRole.Text, Priority.High), out PerceptualColor warningText))
 		{
 			ImGui.TextColored(ToImVec4(warningText.RgbValue), "Warning: Please review your input");
 		}
-		if (theme.TryGetColor(new(SemanticMeaning.Error, VisualRole.Text, ImportanceLevel.Critical), out ColorProperties errorText))
+		if (theme.TryGetColor(new(SemanticMeaning.Error, VisualRole.Text, Priority.Critical), out PerceptualColor errorText))
 		{
 			ImGui.TextColored(ToImVec4(errorText.RgbValue), "Error: Operation failed");
 		}
-		if (theme.TryGetColor(new(SemanticMeaning.Information, VisualRole.Text, ImportanceLevel.Medium), out ColorProperties infoText))
+		if (theme.TryGetColor(new(SemanticMeaning.Information, VisualRole.Text, Priority.Medium), out PerceptualColor infoText))
 		{
 			ImGui.TextColored(ToImVec4(infoText.RgbValue), "Information: Additional details available");
 		}

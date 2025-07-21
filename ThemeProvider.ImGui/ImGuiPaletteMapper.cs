@@ -6,9 +6,7 @@ namespace ktsu.ThemeProvider.ImGui;
 using System.Collections.Immutable;
 using System.Numerics;
 using Hexa.NET.ImGui;
-using ktsu.ThemeProvider.Core;
-using ktsu.ThemeProvider.Output;
-using ktsu.ThemeProvider.Themes;
+using ktsu.ThemeProvider;
 
 /// <summary>
 /// Maps semantic themes to ImGui color palettes, providing comprehensive styling
@@ -24,160 +22,66 @@ public sealed class ImGuiPaletteMapper : IPaletteMapper<ImGuiCol, Vector4>
 	/// <summary>
 	/// Maps a semantic theme to a complete ImGui color palette.
 	/// </summary>
-	public ImmutableDictionary<ImGuiCol, Vector4> MapTheme(ThemeDefinition theme)
+	public ImmutableDictionary<ImGuiCol, Vector4> MapTheme(ISemanticTheme theme)
 	{
 		ArgumentNullException.ThrowIfNull(theme);
 
-		Dictionary<ImGuiCol, Vector4> colors = [];
-
-		// Background colors (using structural colors only)
-		AddColorIfAvailable(colors, theme, ImGuiCol.WindowBg, new(SemanticMeaning.Primary, VisualRole.Background, ImportanceLevel.Low)); // Base
-		AddColorIfAvailable(colors, theme, ImGuiCol.ChildBg, new(SemanticMeaning.Secondary, VisualRole.Background, ImportanceLevel.Low)); // Crust
-		AddColorIfAvailable(colors, theme, ImGuiCol.PopupBg, new(SemanticMeaning.Primary, VisualRole.Surface, ImportanceLevel.Low)); // Surface0
-		AddColorIfAvailable(colors, theme, ImGuiCol.MenuBarBg, new(SemanticMeaning.Secondary, VisualRole.Surface, ImportanceLevel.Low)); // Overlay0
-
-		// Text colors (using structural colors only)
-		AddColorIfAvailable(colors, theme, ImGuiCol.Text, new(SemanticMeaning.Primary, VisualRole.Text, ImportanceLevel.Critical));
-		AddColorIfAvailable(colors, theme, ImGuiCol.TextDisabled, new(SemanticMeaning.Secondary, VisualRole.Text, ImportanceLevel.Medium));
-
-		// Interactive elements (using structural colors only)
-		AddColorIfAvailable(colors, theme, ImGuiCol.Button, new(SemanticMeaning.Primary, VisualRole.Widget, ImportanceLevel.Critical));
-		AddColorIfAvailable(colors, theme, ImGuiCol.ButtonHovered, new(SemanticMeaning.Primary, VisualRole.Widget, ImportanceLevel.Critical), 1.1f);
-		AddColorIfAvailable(colors, theme, ImGuiCol.ButtonActive, new(SemanticMeaning.Secondary, VisualRole.Widget, ImportanceLevel.Critical), 0.9f);
-
-		// Frame/input elements (using structural colors only)
-		AddColorIfAvailable(colors, theme, ImGuiCol.FrameBg, new(SemanticMeaning.Primary, VisualRole.Surface, ImportanceLevel.Medium)); // Surface1
-		AddColorIfAvailable(colors, theme, ImGuiCol.FrameBgHovered, new(SemanticMeaning.Primary, VisualRole.Surface, ImportanceLevel.High)); // Surface2
-		AddColorIfAvailable(colors, theme, ImGuiCol.FrameBgActive, new(SemanticMeaning.Secondary, VisualRole.Surface, ImportanceLevel.High)); // Peach
-
-		// Headers (using structural colors only)
-		AddColorIfAvailable(colors, theme, ImGuiCol.Header, new(SemanticMeaning.Primary, VisualRole.Surface, ImportanceLevel.Low)); // Surface0
-		AddColorIfAvailable(colors, theme, ImGuiCol.HeaderHovered, new(SemanticMeaning.Primary, VisualRole.Surface, ImportanceLevel.Medium)); // Surface1
-		AddColorIfAvailable(colors, theme, ImGuiCol.HeaderActive, new(SemanticMeaning.Secondary, VisualRole.Surface, ImportanceLevel.High)); // Peach
-
-		// Scrollbars (using structural colors only)
-		AddColorIfAvailable(colors, theme, ImGuiCol.ScrollbarBg, new(SemanticMeaning.Secondary, VisualRole.Surface, ImportanceLevel.Low)); // Crust
-		AddColorIfAvailable(colors, theme, ImGuiCol.ScrollbarGrab, new(SemanticMeaning.Primary, VisualRole.Widget, ImportanceLevel.Medium)); // Surface1
-		AddColorIfAvailable(colors, theme, ImGuiCol.ScrollbarGrabHovered, new(SemanticMeaning.Primary, VisualRole.Surface, ImportanceLevel.High)); // Surface2
-		AddColorIfAvailable(colors, theme, ImGuiCol.ScrollbarGrabActive, new(SemanticMeaning.Secondary, VisualRole.Surface, ImportanceLevel.High)); // Peach
-
-		// Checkmarks and selections (using structural colors only)
-		AddColorIfAvailable(colors, theme, ImGuiCol.CheckMark, new(SemanticMeaning.Primary, VisualRole.Widget, ImportanceLevel.High));
-		AddColorIfAvailable(colors, theme, ImGuiCol.SliderGrab, new(SemanticMeaning.Primary, VisualRole.Widget, ImportanceLevel.High));
-		AddColorIfAvailable(colors, theme, ImGuiCol.SliderGrabActive, new(SemanticMeaning.Secondary, VisualRole.Widget, ImportanceLevel.High), 1.2f);
-
-		// Separators (using structural colors only)
-		AddColorIfAvailable(colors, theme, ImGuiCol.Separator, new(SemanticMeaning.Primary, VisualRole.Surface, ImportanceLevel.Medium)); // Surface1
-		AddColorIfAvailable(colors, theme, ImGuiCol.SeparatorHovered, new(SemanticMeaning.Primary, VisualRole.Surface, ImportanceLevel.High)); // Surface2
-		AddColorIfAvailable(colors, theme, ImGuiCol.SeparatorActive, new(SemanticMeaning.Secondary, VisualRole.Surface, ImportanceLevel.High)); // Peach
-
-		// Tabs (using structural colors only)
-		AddColorIfAvailable(colors, theme, ImGuiCol.Tab, new(SemanticMeaning.Primary, VisualRole.Widget, ImportanceLevel.Low)); // Surface0
-		AddColorIfAvailable(colors, theme, ImGuiCol.TabHovered, new(SemanticMeaning.Primary, VisualRole.Widget, ImportanceLevel.Medium)); // Surface1
-		AddColorIfAvailable(colors, theme, ImGuiCol.TabSelected, new(SemanticMeaning.Primary, VisualRole.Widget, ImportanceLevel.High)); // Surface1
-
-		// Plot colors (using structural colors only)
-		AddColorIfAvailable(colors, theme, ImGuiCol.PlotLines, new(SemanticMeaning.Secondary, VisualRole.Widget, ImportanceLevel.Medium));
-		AddColorIfAvailable(colors, theme, ImGuiCol.PlotLinesHovered, new(SemanticMeaning.Secondary, VisualRole.Widget, ImportanceLevel.Medium), 1.2f);
-		AddColorIfAvailable(colors, theme, ImGuiCol.PlotHistogram, new(SemanticMeaning.Secondary, VisualRole.Widget, ImportanceLevel.High));
-		AddColorIfAvailable(colors, theme, ImGuiCol.PlotHistogramHovered, new(SemanticMeaning.Secondary, VisualRole.Widget, ImportanceLevel.High), 1.2f);
-
-		// Table colors (using structural colors only)
-		AddColorIfAvailable(colors, theme, ImGuiCol.TableHeaderBg, new(SemanticMeaning.Primary, VisualRole.Widget, ImportanceLevel.Medium)); // Surface1
-		AddColorIfAvailable(colors, theme, ImGuiCol.TableBorderStrong, new(SemanticMeaning.Primary, VisualRole.Surface, ImportanceLevel.High)); // Surface2
-		AddColorIfAvailable(colors, theme, ImGuiCol.TableBorderLight, new(SemanticMeaning.Primary, VisualRole.Surface, ImportanceLevel.Low)); // Surface0
-		AddColorIfAvailable(colors, theme, ImGuiCol.TableRowBg, new(SemanticMeaning.Primary, VisualRole.Background, ImportanceLevel.Low), alpha: 0.0f); // Base (transparent)
-		AddColorIfAvailable(colors, theme, ImGuiCol.TableRowBgAlt, new(SemanticMeaning.Secondary, VisualRole.Background, ImportanceLevel.Low), alpha: 0.2f); // Crust
-
-		// Text selection (using structural colors only)
-		AddColorIfAvailable(colors, theme, ImGuiCol.TextSelectedBg, new(SemanticMeaning.Secondary, VisualRole.Surface, ImportanceLevel.Medium), alpha: 0.4f);
-
-		// Title bars (using structural colors only)
-		AddColorIfAvailable(colors, theme, ImGuiCol.TitleBg, new(SemanticMeaning.Primary, VisualRole.Surface, ImportanceLevel.Medium)); // Surface0
-		AddColorIfAvailable(colors, theme, ImGuiCol.TitleBgActive, new(SemanticMeaning.Primary, VisualRole.Widget, ImportanceLevel.Medium)); // Surface1
-		AddColorIfAvailable(colors, theme, ImGuiCol.TitleBgCollapsed, new(SemanticMeaning.Secondary, VisualRole.Surface, ImportanceLevel.Low)); // Crust
-
-		// Borders (using structural colors only)
-		AddColorIfAvailable(colors, theme, ImGuiCol.Border, new(SemanticMeaning.Primary, VisualRole.Surface, ImportanceLevel.Medium), alpha: 0.5f); // Surface1
-		AddColorIfAvailable(colors, theme, ImGuiCol.BorderShadow, new(SemanticMeaning.Secondary, VisualRole.Background, ImportanceLevel.Low), alpha: 0.0f); // Crust (invisible)
-
-		// Fill in any missing colors with defaults
-		FillMissingColors(colors);
-
-		return colors.ToImmutableDictionary();
-	}
-
-	/// <summary>
-	/// Gets the default color for a specific ImGui color when no semantic mapping is available.
-	/// </summary>
-	public Vector4 GetDefaultColor(ImGuiCol colorKey) => colorKey switch
-	{
-		// Basic grayscale defaults for dark theme
-		ImGuiCol.Text => new Vector4(1.00f, 1.00f, 1.00f, 1.00f),
-		ImGuiCol.TextDisabled => new Vector4(0.50f, 0.50f, 0.50f, 1.00f),
-		ImGuiCol.WindowBg => new Vector4(0.06f, 0.06f, 0.06f, 0.94f),
-		ImGuiCol.ChildBg => new Vector4(0.00f, 0.00f, 0.00f, 0.00f),
-		ImGuiCol.PopupBg => new Vector4(0.08f, 0.08f, 0.08f, 0.94f),
-		ImGuiCol.Border => new Vector4(0.43f, 0.43f, 0.50f, 0.50f),
-		ImGuiCol.BorderShadow => new Vector4(0.00f, 0.00f, 0.00f, 0.00f),
-		ImGuiCol.FrameBg => new Vector4(0.16f, 0.16f, 0.16f, 0.54f),
-		ImGuiCol.FrameBgHovered => new Vector4(0.26f, 0.26f, 0.26f, 0.40f),
-		ImGuiCol.FrameBgActive => new Vector4(0.26f, 0.26f, 0.26f, 0.67f),
-		ImGuiCol.Button => new Vector4(0.26f, 0.59f, 0.98f, 0.40f),
-		ImGuiCol.ButtonHovered => new Vector4(0.26f, 0.59f, 0.98f, 1.00f),
-		ImGuiCol.ButtonActive => new Vector4(0.06f, 0.53f, 0.98f, 1.00f),
-		_ => new Vector4(0.50f, 0.50f, 0.50f, 1.00f) // Generic fallback
-	};
-
-	/// <summary>
-	/// Gets metadata about the mapping process.
-	/// </summary>
-	public ImmutableDictionary<string, object> GetMappingMetadata(ThemeDefinition theme)
-	{
-		ArgumentNullException.ThrowIfNull(theme);
-
-		return ImmutableDictionary<string, object>.Empty
-			.Add("framework", FrameworkName)
-			.Add("theme_name", theme.Name)
-			.Add("theme_type", theme.IsDarkTheme ? "Dark" : "Light")
-			.Add("mapped_colors_count", MapTheme(theme).Count)
-			.Add("generation_time", DateTime.UtcNow);
-	}
-
-	private static void AddColorIfAvailable(Dictionary<ImGuiCol, Vector4> colors, ThemeDefinition theme,
-		ImGuiCol imguiColor, SemanticColorSpec spec, float brightnessFactor = 1.0f, float alpha = 1.0f)
-	{
-		if (theme.TryGetColor(spec, out ColorProperties color))
+		Dictionary<ImGuiCol, SemanticColorRequest> requests = new()
 		{
-			RgbColor rgbColor = brightnessFactor != 1.0f ?
-				AdjustBrightness(color.RgbValue, brightnessFactor) :
-				color.RgbValue;
+			{ ImGuiCol.WindowBg, new(SemanticMeaning.Neutral, Priority.VeryLow)},
+			{ ImGuiCol.ChildBg, new(SemanticMeaning.Neutral, Priority.Low)},
+			{ ImGuiCol.PopupBg, new(SemanticMeaning.Neutral, Priority.Low)},
+			{ ImGuiCol.MenuBarBg, new(SemanticMeaning.Neutral, Priority.Low)},
+			{ ImGuiCol.FrameBg, new(SemanticMeaning.Neutral, Priority.MediumLow)},
+			{ ImGuiCol.FrameBgHovered, new(SemanticMeaning.Neutral, Priority.Medium)},
+			{ ImGuiCol.FrameBgActive, new(SemanticMeaning.Neutral, Priority.MediumHigh)},
+			{ ImGuiCol.TextDisabled, new(SemanticMeaning.Neutral, Priority.High)},
+			{ ImGuiCol.Text, new(SemanticMeaning.Neutral, Priority.VeryHigh)},
 
-			colors[imguiColor] = new Vector4(rgbColor.R, rgbColor.G, rgbColor.B, alpha);
-		}
+			{ ImGuiCol.ScrollbarBg, new(SemanticMeaning.Neutral, Priority.Low)},
+			{ ImGuiCol.ScrollbarGrab, new(SemanticMeaning.Neutral, Priority.Medium)},
+			{ ImGuiCol.ScrollbarGrabHovered, new(SemanticMeaning.Neutral, Priority.MediumHigh)},
+			{ ImGuiCol.ScrollbarGrabActive, new(SemanticMeaning.Neutral, Priority.High)},
+
+			{ ImGuiCol.Button, new(SemanticMeaning.Primary, Priority.Medium)},
+			{ ImGuiCol.ButtonHovered, new(SemanticMeaning.Primary, Priority.High)},
+			{ ImGuiCol.ButtonActive, new(SemanticMeaning.Primary, Priority.VeryHigh)},
+			{ ImGuiCol.Header, new(SemanticMeaning.Primary, Priority.Medium)},
+			{ ImGuiCol.HeaderHovered, new(SemanticMeaning.Primary, Priority.High)},
+			{ ImGuiCol.HeaderActive, new(SemanticMeaning.Primary, Priority.VeryHigh)},
+
+			{ ImGuiCol.CheckMark, new(SemanticMeaning.Primary, Priority.Medium)},
+			{ ImGuiCol.SliderGrab, new(SemanticMeaning.Primary, Priority.Medium)},
+			{ ImGuiCol.SliderGrabActive, new(SemanticMeaning.Primary, Priority.High)},
+
+			{ ImGuiCol.Separator, new(SemanticMeaning.Neutral, Priority.MediumHigh)},
+			{ ImGuiCol.SeparatorHovered, new(SemanticMeaning.Neutral, Priority.High)},
+			{ ImGuiCol.SeparatorActive, new(SemanticMeaning.Neutral, Priority.VeryHigh)},
+
+			{ ImGuiCol.Tab, new(SemanticMeaning.Neutral, Priority.MediumLow)},
+			{ ImGuiCol.TabHovered, new(SemanticMeaning.Neutral, Priority.Medium)},
+			{ ImGuiCol.TabSelected, new(SemanticMeaning.Neutral, Priority.High)},
+
+			{ ImGuiCol.PlotLines, new(SemanticMeaning.Alternate, Priority.Medium)},
+			{ ImGuiCol.PlotLinesHovered, new(SemanticMeaning.Alternate, Priority.MediumHigh)},
+
+			{ ImGuiCol.PlotHistogram, new(SemanticMeaning.Alternate, Priority.Medium)},
+			{ ImGuiCol.PlotHistogramHovered, new(SemanticMeaning.Alternate, Priority.MediumHigh)},
+
+			{ ImGuiCol.TableHeaderBg, new(SemanticMeaning.Primary, Priority.Medium)},
+			{ ImGuiCol.TableBorderStrong, new(SemanticMeaning.Neutral, Priority.MediumHigh)},
+			{ ImGuiCol.TableBorderLight, new(SemanticMeaning.Neutral, Priority.MediumLow)},
+			{ ImGuiCol.TableRowBg, new(SemanticMeaning.Neutral, Priority.Low) },
+			{ ImGuiCol.TableRowBgAlt, new(SemanticMeaning.Neutral, Priority.MediumLow) },
+
+			{ ImGuiCol.TextSelectedBg, new(SemanticMeaning.Alternate, Priority.Medium) },
+
+			{ ImGuiCol.TitleBg, new(SemanticMeaning.Neutral, Priority.Medium)},
+			{ ImGuiCol.TitleBgActive, new(SemanticMeaning.Primary, Priority.Medium)},
+			{ ImGuiCol.TitleBgCollapsed, new(SemanticMeaning.Neutral, Priority.MediumLow)},
+
+			{ ImGuiCol.Border, new(SemanticMeaning.Neutral, Priority.Medium) },
+			{ ImGuiCol.BorderShadow, new(SemanticMeaning.Neutral, Priority.Low) },
+		};
 	}
-
-	private void FillMissingColors(Dictionary<ImGuiCol, Vector4> colors)
-	{
-		// Fill in any ImGui colors that weren't mapped with defaults
-		// Use a reasonable upper bound for ImGui color indices (typically < 100)
-		const int MaxImGuiColorIndex = 100;
-
-		foreach (ImGuiCol colorKey in Enum.GetValues<ImGuiCol>())
-		{
-			// Only add colors that have valid indices and aren't already present
-			int colorIndex = (int)colorKey;
-			if (colorIndex >= 0 && colorIndex < MaxImGuiColorIndex && !colors.ContainsKey(colorKey))
-			{
-				colors[colorKey] = GetDefaultColor(colorKey);
-			}
-		}
-	}
-
-	private static RgbColor AdjustBrightness(RgbColor color, float factor) =>
-		new(
-			Math.Clamp(color.R * factor, 0f, 1f),
-			Math.Clamp(color.G * factor, 0f, 1f),
-			Math.Clamp(color.B * factor, 0f, 1f)
-		);
 }
