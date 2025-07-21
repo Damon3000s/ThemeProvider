@@ -11,6 +11,15 @@ using ktsu.ImGuiApp;
 using ktsu.ThemeProvider;
 using ktsu.ThemeProvider.ImGui;
 using ktsu.ThemeProvider.Themes.Catppuccin;
+using ktsu.ThemeProvider.Themes.Nord;
+using ktsu.ThemeProvider.Themes.Monokai;
+using ktsu.ThemeProvider.Themes.TokyoNight;
+using ktsu.ThemeProvider.Themes.Gruvbox;
+using ktsu.ThemeProvider.Themes.Dracula;
+using ktsu.ThemeProvider.Themes.OneDark;
+using ktsu.ThemeProvider.Themes.VSCode;
+using ktsu.ThemeProvider.Themes.Nightfly;
+using ktsu.ThemeProvider.Themes.Everforest;
 
 internal static class Program
 {
@@ -18,8 +27,46 @@ internal static class Program
 	private static ImGuiPaletteMapper imguiMapper = null!;
 
 	// Theme selection
-	private static readonly ISemanticTheme[] availableThemes = [new Latte(), new Frappe(), new Macchiato(), new Mocha()];
-	private static readonly string[] themeNames = ["Latte (Light)", "Frappe (Dark)", "Macchiato (Dark)", "Mocha (Darkest)"];
+	private static readonly ISemanticTheme[] availableThemes = [
+		// Catppuccin variants
+		new Latte(),
+		new Frappe(),
+		new Macchiato(),
+		new Mocha(),
+		// Other popular themes
+		new Nord(),
+		new Monokai(),
+		new TokyoNight(),
+		new GruvboxDark(),
+		new GruvboxLight(),
+		new Dracula(),
+		new OneDark(),
+		new VSCodeDark(),
+		new VSCodeLight(),
+		new Nightfly(),
+		new EverforestDark(),
+		new EverforestLight(),
+	];
+
+	private static readonly string[] themeNames = [
+		"Catppuccin Latte (Light)",
+		"Catppuccin Frappe (Dark)",
+		"Catppuccin Macchiato (Dark)",
+		"Catppuccin Mocha (Darkest)",
+		"Nord (Dark)",
+		"Monokai (Dark)",
+		"Tokyo Night (Dark)",
+		"Gruvbox Dark",
+		"Gruvbox Light",
+		"Dracula (Dark)",
+		"One Dark",
+		"VSCode Dark",
+		"VSCode Light",
+		"Nightfly (Dark)",
+		"Everforest Dark",
+		"Everforest Light",
+	];
+
 	private static int selectedThemeIndex;
 
 	// UI State
@@ -51,7 +98,7 @@ internal static class Program
 
 	private static void OnStart()
 	{
-		selectedThemeIndex = 3; // Start with Mocha (darkest)
+		selectedThemeIndex = 3; // Start with Catppuccin Mocha
 		theme = availableThemes[selectedThemeIndex];
 		imguiMapper = new ImGuiPaletteMapper();
 
@@ -126,7 +173,7 @@ internal static class Program
 	private static void RenderThemeOverview()
 	{
 		// Theme selection
-		ImGui.TextUnformatted("Select Catppuccin Variant:");
+		ImGui.TextUnformatted("Select Theme:");
 		if (ImGui.Combo("##ThemeVariant", ref selectedThemeIndex, themeNames, themeNames.Length))
 		{
 			theme = availableThemes[selectedThemeIndex];
@@ -192,7 +239,7 @@ internal static class Program
 		}
 
 		ImGui.Spacing();
-		ImGui.TextUnformatted("Note: Neutral uses full range, non-neutral uses 50-90% of neutral range");
+		ImGui.TextUnformatted("Note: Neutral uses full global range, non-neutral uses 50-90% of global range");
 		ImGui.TextUnformatted($"Theme Type: {(theme.IsDarkTheme ? "Dark" : "Light")} - Priority ordering {(theme.IsDarkTheme ? "low to high" : "high to low")} lightness");
 	}
 

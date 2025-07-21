@@ -36,8 +36,8 @@ public sealed class SemanticColorMapper
 			return ImmutableDictionary<SemanticColorRequest, PerceptualColor>.Empty;
 		}
 
-		// Calculate the neutral lightness range for use by all semantics
-		(float neutralMinLightness, float neutralMaxLightness) = CalculateNeutralLightnessRange(theme);
+		// Calculate the global lightness range for use by all semantics
+		(float globalMinLightness, float globalMaxLightness) = CalculateGlobalLightnessRange(theme);
 
 		// Always use ALL possible priority levels for consistent mapping
 		Priority[] allPriorities = Enum.GetValues<Priority>();
@@ -65,7 +65,7 @@ public sealed class SemanticColorMapper
 
 				// Calculate target lightness based on whether this is neutral or non-neutral
 				float targetLightness = CalculateTargetLightnessForSemantic(
-					priority, meaning, neutralMinLightness, neutralMaxLightness, theme.IsDarkTheme);
+					priority, meaning, globalMinLightness, globalMaxLightness, theme.IsDarkTheme);
 
 				// Generate the color using interpolation/extrapolation
 				PerceptualColor color = InterpolateToTargetLightness(availableColors, targetLightness);
@@ -78,20 +78,11 @@ public sealed class SemanticColorMapper
 	}
 
 	/// <summary>
-	/// Calculates the lightness range of the neutral semantic meaning.
+	/// Calculates the lightness range across all available semantics in the theme.
 	/// This range will be used as the basis for all semantic color mappings.
 	/// </summary>
-	private static (float min, float max) CalculateNeutralLightnessRange(ISemanticTheme theme)
+	private static (float min, float max) CalculateGlobalLightnessRange(ISemanticTheme theme)
 	{
-		if (theme.SemanticMapping.TryGetValue(SemanticMeaning.Neutral, out Collection<PerceptualColor>? neutralColors) &&
-			neutralColors.Count > 0)
-		{
-			float minLightness = neutralColors.Min(c => c.Lightness);
-			float maxLightness = neutralColors.Max(c => c.Lightness);
-			return (minLightness, maxLightness);
-		}
-
-		// Fallback: if no neutral colors, use global range
 		float globalMin = float.MaxValue;
 		float globalMax = float.MinValue;
 
@@ -113,7 +104,7 @@ public sealed class SemanticColorMapper
 		// Ensure we have a valid range
 		if (globalMin == float.MaxValue || globalMax == float.MinValue)
 		{
-			return (0.0f, 1.0f); // Final fallback range
+			return (0.0f, 1.0f); // Fallback range
 		}
 
 		return (globalMin, globalMax);
@@ -121,13 +112,13 @@ public sealed class SemanticColorMapper
 
 	/// <summary>
 	/// Calculates the target lightness for a specific semantic meaning and priority.
-	/// Neutral semantics use the full neutral range, while non-neutral semantics use 50-90% of it.
+	/// Neutral semantics use the full global range, while non-neutral semantics use 50-90% of it.
 	/// </summary>
 	private static float CalculateTargetLightnessForSemantic(
 		Priority priority,
 		SemanticMeaning meaning,
-		float neutralMinLightness,
-		float neutralMaxLightness,
+		float globalMinLightness,
+		float globalMaxLightness,
 		bool isDarkTheme)
 	{
 		// Get all priorities and find the position of the current priority
@@ -136,8 +127,8 @@ public sealed class SemanticColorMapper
 
 		if (allPriorities.Length == 1)
 		{
-			float neutralCenter = (neutralMinLightness + neutralMaxLightness) / 2.0f;
-			return meaning == SemanticMeaning.Neutral ? neutralCenter : neutralCenter;
+			float globalCenter = (globalMinLightness + globalMaxLightness) / 2.0f;
+			return meaning == SemanticMeaning.Neutral ? globalCenter : globalCenter;
 		}
 
 		// Calculate position in range (0.0 to 1.0)
@@ -147,16 +138,16 @@ public sealed class SemanticColorMapper
 		float minLightness, maxLightness;
 		if (meaning == SemanticMeaning.Neutral)
 		{
-			// Neutral uses the full neutral range
-			minLightness = neutralMinLightness;
-			maxLightness = neutralMaxLightness;
+			// Neutral uses the full global range
+			minLightness = globalMinLightness;
+			maxLightness = globalMaxLightness;
 		}
 		else
 		{
-			// Non-neutral uses 50-90% of the neutral range
-			float neutralRange = neutralMaxLightness - neutralMinLightness;
-			float rangeStart = neutralMinLightness + (neutralRange * 0.5f); // 50%
-			float rangeEnd = neutralMinLightness + (neutralRange * 0.9f);   // 90%
+			// Non-neutral uses 50-90% of the global range
+			float globalRange = globalMaxLightness - globalMinLightness;
+			float rangeStart = globalMinLightness + (globalRange * 0.5f); // 50%
+			float rangeEnd = globalMinLightness + (globalRange * 0.9f);   // 90%
 
 			minLightness = rangeStart;
 			maxLightness = rangeEnd;
