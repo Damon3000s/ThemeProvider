@@ -1,6 +1,7 @@
 ﻿<Project Sdk="ktsu.Sdk.ImGuiApp">
 
   <ItemGroup>
+    <PackageReference Include="Hexa.NET.ImGui" />
     <PackageReference Include="ktsu.ImGuiApp" />
   </ItemGroup>
 
