@@ -1,5 +1,5 @@
-## v1.0.1 (patch)
+## v1.0.2 (patch)
 
-Changes since v1.0.0:
+Changes since v1.0.1:
 
-- Add new themes: Dracula, Everforest, Gruvbox, Monokai, Nightfly, One Dark, Tokyo Night, and VSCode ([@matt-edmondson](https://github.com/matt-edmondson))
+- Refactor Catppuccin, Dracula, and other themes to streamline Neutrals collection ([@matt-edmondson](https://github.com/matt-edmondson))
