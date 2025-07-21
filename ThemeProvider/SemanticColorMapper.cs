@@ -207,26 +207,83 @@ public sealed class SemanticColorMapper
 	private static PerceptualColor ExtrapolateColorToLightness(PerceptualColor baseColor, float targetLightness)
 	{
 		// Work in Oklab space for perceptually uniform lightness adjustment
-		OklabColor oklab = baseColor.OklabValue;
+		OklabColor baseOklab = baseColor.OklabValue;
 
-		// Create new color with target lightness but same chroma (a, b)
+		// Start with the target lightness and original chroma
 		OklabColor targetOklab = new(
 			L: Math.Clamp(targetLightness, 0.0f, 1.0f),
-			A: oklab.A,
-			B: oklab.B
+			A: baseOklab.A,
+			B: baseOklab.B
 		);
 
-		// Convert back to RGB
+		// Convert to RGB to check if it's in gamut
 		RgbColor targetRgb = ColorMath.OklabToRgb(targetOklab);
 
-		// Clamp RGB values to valid range
-		targetRgb = new RgbColor(
-			Math.Clamp(targetRgb.R, 0f, 1f),
-			Math.Clamp(targetRgb.G, 0f, 1f),
-			Math.Clamp(targetRgb.B, 0f, 1f)
+		// Check if RGB values are within valid range
+		bool inGamut = targetRgb.R >= 0f && targetRgb.R <= 1f &&
+					   targetRgb.G >= 0f && targetRgb.G <= 1f &&
+					   targetRgb.B >= 0f && targetRgb.B <= 1f;
+
+		if (inGamut)
+		{
+			// Color is in gamut, use it directly
+			return new PerceptualColor(targetRgb);
+		}
+
+		// Color is out of gamut, we need to find the best in-gamut color
+		// by reducing chroma while maintaining the target lightness
+		float originalChroma = MathF.Sqrt((baseOklab.A * baseOklab.A) + (baseOklab.B * baseOklab.B));
+		float hue = MathF.Atan2(baseOklab.B, baseOklab.A);
+
+		// Binary search for the maximum chroma that keeps us in gamut
+		float minChroma = 0f;
+		float maxChroma = originalChroma;
+		const float tolerance = 0.001f;
+		const int maxIterations = 20;
+
+		OklabColor bestOklab = targetOklab;
+
+		for (int i = 0; i < maxIterations && (maxChroma - minChroma) > tolerance; i++)
+		{
+			float testChroma = (minChroma + maxChroma) / 2f;
+
+			// Create color with reduced chroma
+			OklabColor testOklab = new(
+				L: targetLightness,
+				A: testChroma * MathF.Cos(hue),
+				B: testChroma * MathF.Sin(hue)
+			);
+
+			RgbColor testRgb = ColorMath.OklabToRgb(testOklab);
+
+			bool testInGamut = testRgb.R >= 0f && testRgb.R <= 1f &&
+							   testRgb.G >= 0f && testRgb.G <= 1f &&
+							   testRgb.B >= 0f && testRgb.B <= 1f;
+
+			if (testInGamut)
+			{
+				// This chroma works, try higher
+				minChroma = testChroma;
+				bestOklab = testOklab;
+			}
+			else
+			{
+				// This chroma is too high, try lower
+				maxChroma = testChroma;
+			}
+		}
+
+		// Convert the best in-gamut color to RGB
+		RgbColor bestRgb = ColorMath.OklabToRgb(bestOklab);
+
+		// Final safety clamp (should not be needed if binary search worked correctly)
+		bestRgb = new RgbColor(
+			Math.Clamp(bestRgb.R, 0f, 1f),
+			Math.Clamp(bestRgb.G, 0f, 1f),
+			Math.Clamp(bestRgb.B, 0f, 1f)
 		);
 
-		return new PerceptualColor(targetRgb);
+		return new PerceptualColor(bestRgb);
 	}
 
 	/// <summary>
