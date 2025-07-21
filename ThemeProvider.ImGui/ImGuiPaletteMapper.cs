@@ -51,8 +51,15 @@ public sealed class ImGuiPaletteMapper : IPaletteMapper<ImGuiCol, Vector4>
 			{ ImGuiCol.HeaderHovered, new(SemanticMeaning.Primary, Priority.High)},
 			{ ImGuiCol.HeaderActive, new(SemanticMeaning.Primary, Priority.VeryHigh)},
 
-			{ ImGuiCol.CheckMark, new(SemanticMeaning.Primary, Priority.Medium)},
-			{ ImGuiCol.SliderGrab, new(SemanticMeaning.Primary, Priority.Medium)},
+			{ ImGuiCol.CheckMark, new(SemanticMeaning.Primary, Priority.High)},
+
+			{ ImGuiCol.ResizeGrip, new(SemanticMeaning.Neutral, Priority.MediumHigh)},
+			{ ImGuiCol.ResizeGripHovered, new(SemanticMeaning.Neutral, Priority.High)},
+			{ ImGuiCol.ResizeGripActive, new(SemanticMeaning.Neutral, Priority.VeryHigh)},
+
+			{ ImGuiCol.NavWindowingHighlight, new(SemanticMeaning.Primary, Priority.VeryHigh)},
+
+			{ ImGuiCol.SliderGrab, new(SemanticMeaning.Primary, Priority.MediumHigh)},
 			{ ImGuiCol.SliderGrabActive, new(SemanticMeaning.Primary, Priority.High)},
 
 			{ ImGuiCol.Separator, new(SemanticMeaning.Neutral, Priority.MediumHigh)},
@@ -75,7 +82,7 @@ public sealed class ImGuiPaletteMapper : IPaletteMapper<ImGuiCol, Vector4>
 			{ ImGuiCol.TableRowBg, new(SemanticMeaning.Neutral, Priority.Low) },
 			{ ImGuiCol.TableRowBgAlt, new(SemanticMeaning.Neutral, Priority.MediumLow) },
 
-			{ ImGuiCol.TextSelectedBg, new(SemanticMeaning.Alternate, Priority.Medium) },
+			{ ImGuiCol.TextSelectedBg, new(SemanticMeaning.Alternate, Priority.High) },
 
 			{ ImGuiCol.TitleBg, new(SemanticMeaning.Neutral, Priority.Medium)},
 			{ ImGuiCol.TitleBgActive, new(SemanticMeaning.Primary, Priority.MediumHigh)},

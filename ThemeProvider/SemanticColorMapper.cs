@@ -113,8 +113,8 @@ public sealed class SemanticColorMapper
 	}
 
 	/// <summary>
-	/// Creates a mapping from priority levels to target lightness values by dividing
-	/// the global lightness range according to the priority levels.
+	/// Creates a mapping from priority levels to target lightness values by extending
+	/// the global lightness range to ensure sufficient contrast between priority levels.
 	/// </summary>
 	private static Dictionary<Priority, float> CalculatePriorityLightnessMapping(
 		List<Priority> priorities,
@@ -136,7 +136,49 @@ public sealed class SemanticColorMapper
 			return result;
 		}
 
-		float lightnessRange = maxLightness - minLightness;
+		// Define minimum contrast between adjacent priority levels for good visual distinction
+		const float minContrastBetweenPriorities = 0.12f;
+
+		// Calculate required range for all priorities with minimum contrast
+		float requiredRange = (priorities.Count - 1) * minContrastBetweenPriorities;
+		float originalRange = maxLightness - minLightness;
+
+		// Determine the extended range
+		float extendedRange = Math.Max(requiredRange, originalRange);
+
+		// Calculate the center point of the original range
+		float originalCenter = (minLightness + maxLightness) / 2.0f;
+
+		// Calculate extended bounds, ensuring they stay within 0.0-1.0
+		float extendedMinLightness, extendedMaxLightness;
+
+		if (isDarkTheme)
+		{
+			// For dark themes, extend upward (toward lighter) for better visibility progression
+			extendedMinLightness = Math.Max(0.0f, originalCenter - (extendedRange / 2.0f));
+			extendedMaxLightness = Math.Min(1.0f, extendedMinLightness + extendedRange);
+
+			// If we hit the upper bound, adjust the minimum accordingly
+			if (extendedMaxLightness == 1.0f)
+			{
+				extendedMinLightness = Math.Max(0.0f, 1.0f - extendedRange);
+			}
+		}
+		else
+		{
+			// For light themes, extend downward (toward darker) for better visibility progression
+			extendedMaxLightness = Math.Min(1.0f, originalCenter + (extendedRange / 2.0f));
+			extendedMinLightness = Math.Max(0.0f, extendedMaxLightness - extendedRange);
+
+			// If we hit the lower bound, adjust the maximum accordingly
+			if (extendedMinLightness == 0.0f)
+			{
+				extendedMaxLightness = Math.Min(1.0f, extendedRange);
+			}
+		}
+
+		// Recalculate the actual extended range after bounds checking
+		float finalRange = extendedMaxLightness - extendedMinLightness;
 
 		// For dark themes, higher priority should be lighter (more visible)
 		// For light themes, higher priority should be darker (more visible)
@@ -144,19 +186,19 @@ public sealed class SemanticColorMapper
 		{
 			Priority priority = priorities[i];
 
-			// Calculate position in range (0.0 to 1.0)
-			float position = priorities.Count == 1 ? 0.5f : i / (float)(priorities.Count - 1);
+			// Calculate position in extended range (0.0 to 1.0)
+			float position = i / (float)(priorities.Count - 1);
 
 			float targetLightness;
 			if (isDarkTheme)
 			{
 				// In dark themes, higher priority (later in enum) gets higher lightness
-				targetLightness = minLightness + (position * lightnessRange);
+				targetLightness = extendedMinLightness + (position * finalRange);
 			}
 			else
 			{
 				// In light themes, higher priority (later in enum) gets lower lightness
-				targetLightness = maxLightness - (position * lightnessRange);
+				targetLightness = extendedMaxLightness - (position * finalRange);
 			}
 
 			result[priority] = Math.Clamp(targetLightness, 0.0f, 1.0f);
