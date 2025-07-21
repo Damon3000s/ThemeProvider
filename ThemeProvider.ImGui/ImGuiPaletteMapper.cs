@@ -83,5 +83,21 @@ public sealed class ImGuiPaletteMapper : IPaletteMapper<ImGuiCol, Vector4>
 			{ ImGuiCol.Border, new(SemanticMeaning.Neutral, Priority.Medium) },
 			{ ImGuiCol.BorderShadow, new(SemanticMeaning.Neutral, Priority.Low) },
 		};
+
+		// Map the semantic color requests to actual colors
+		ImmutableDictionary<SemanticColorRequest, PerceptualColor> mappedColors = SemanticColorMapper.MapColors(requests.Values, theme);
+
+		// Convert the PerceptualColors to Vector4 format for ImGui
+		Dictionary<ImGuiCol, Vector4> result = [];
+		foreach ((ImGuiCol imguiCol, SemanticColorRequest request) in requests)
+		{
+			if (mappedColors.TryGetValue(request, out PerceptualColor color))
+			{
+				RgbColor rgb = color.RgbValue;
+				result[imguiCol] = new Vector4(rgb.R, rgb.G, rgb.B, 1.0f);
+			}
+		}
+
+		return result.ToImmutableDictionary();
 	}
 }

@@ -5,7 +5,6 @@
 namespace ktsu.ThemeProvider.Themes.Catppuccin;
 
 using System.Collections.ObjectModel;
-using ktsu.ThemeProvider.Core;
 
 /// <summary>
 /// Provides the official Catppuccin Mocha color palette with exact hex values and properties.
@@ -69,5 +68,10 @@ public class Mocha : ISemanticTheme
 		[SemanticMeaning.Failure] = [Red],
 		[SemanticMeaning.Debug] = [Mauve]
 	};
+
+	/// <summary>
+	/// Catppuccin Mocha is a dark theme
+	/// </summary>
+	public bool IsDarkTheme => true;
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
 }

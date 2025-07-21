@@ -17,4 +17,10 @@ public interface ISemanticTheme
 	/// This enables semantic color assignment for UI elements based on their intended meaning.
 	/// </summary>
 	public Dictionary<SemanticMeaning, Collection<PerceptualColor>> SemanticMapping { get; }
+
+	/// <summary>
+	/// Gets a value indicating whether this is a dark theme.
+	/// Used to determine color range sorting and interpolation direction.
+	/// </summary>
+	public bool IsDarkTheme { get; }
 }
