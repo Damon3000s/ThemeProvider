@@ -1,5 +1,5 @@
-## v1.0.4 (patch)
+## v1.0.5 (patch)
 
-Changes since v1.0.3:
+Changes since v1.0.4:
 
-- Add ThemeRegistry and update documentation for ThemeProvider ([@matt-edmondson](https://github.com/matt-edmondson))
+- Upgrade ktsu.Sdk to version 1.49.0 ([@matt-edmondson](https://github.com/matt-edmondson))
