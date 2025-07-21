@@ -17,11 +17,11 @@ public static class CatppuccinMochaSemanticMapping
 	/// </summary>
 	public static Dictionary<SemanticMeaning, float> SemanticHues => new()
 	{
-		// Blue family for normal interactions (Sapphire/Blue)
-		[SemanticMeaning.Normal] = CatppuccinMochaPalette.Sapphire.Hue,
+		// Blue family for primary interactions (Sapphire/Blue)
+		[SemanticMeaning.Primary] = CatppuccinMochaPalette.Sapphire.Hue,
 
-		// Peach for emphasis and highlighting
-		[SemanticMeaning.Emphasis] = CatppuccinMochaPalette.Peach.Hue,
+		// Peach for secondary content and highlighting
+		[SemanticMeaning.Secondary] = CatppuccinMochaPalette.Peach.Hue,
 
 		// Green for success states
 		[SemanticMeaning.Success] = CatppuccinMochaPalette.Green.Hue,
@@ -57,8 +57,8 @@ public static class CatppuccinMochaSemanticMapping
 	{
 		return meaning switch
 		{
-			SemanticMeaning.Normal => CatppuccinMochaPalette.Blue,
-			SemanticMeaning.Emphasis => CatppuccinMochaPalette.Peach,
+			SemanticMeaning.Primary => CatppuccinMochaPalette.Blue,
+			SemanticMeaning.Secondary => CatppuccinMochaPalette.Peach,
 			SemanticMeaning.Success => CatppuccinMochaPalette.Green,
 			SemanticMeaning.CallToAction => CatppuccinMochaPalette.Mauve,
 			SemanticMeaning.Information => CatppuccinMochaPalette.Sky,
@@ -114,12 +114,12 @@ public static class CatppuccinMochaSemanticMapping
 	public static CatppuccinMochaPalette.PaletteColor GetTextColor(SemanticColorSpec spec)
 	{
 		// For semantic text colors, use the semantic meaning
-		if (spec.Meaning != SemanticMeaning.Normal)
+		if (spec.Meaning != SemanticMeaning.Primary)
 		{
 			return GetPrimaryColorFor(spec.Meaning);
 		}
 
-		// For normal text, use hierarchy
+		// For primary text, use hierarchy
 		return spec.Importance switch
 		{
 			ImportanceLevel.Critical => CatppuccinMochaPalette.Text,

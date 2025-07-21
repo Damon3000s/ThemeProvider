@@ -48,7 +48,7 @@ public readonly record struct ColorProperties
 	public static ColorProperties FromRgb(RgbColor rgb, SemanticColorSpec semanticSpec, float weight = 0.5f,
 		float temperature = 0.0f, float energy = 0.5f, float formality = 0.5f, float accessibilityPriority = 0.5f)
 	{
-		OklabColor oklab = ColorMath.RgbToOklab(rgb.ToLinear());
+		OklabColor oklab = ColorMath.RgbToOklab(rgb);
 		return new ColorProperties
 		{
 			OklabValue = oklab,

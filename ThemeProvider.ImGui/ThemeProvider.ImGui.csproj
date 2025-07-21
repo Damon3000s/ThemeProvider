@@ -1,13 +1,11 @@
-﻿<Project Sdk="ktsu.Sdk.ImGuiApp">
+﻿<Project Sdk="ktsu.Sdk.Lib">
 
   <ItemGroup>
     <ProjectReference Include="..\ThemeProvider\ThemeProvider.csproj" />
-    <ProjectReference Include="..\ThemeProvider.ImGui\ThemeProvider.ImGui.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Hexa.NET.ImGui" />
-    <PackageReference Include="ktsu.ImGuiApp" />
   </ItemGroup>
 
 </Project>

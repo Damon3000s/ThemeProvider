@@ -156,13 +156,13 @@ public sealed class SemanticPaletteEngine(ThemeDefinition theme, int? seed = nul
 			return Vector4.Distance(targetSemantic, kvp.Value.ToSemanticVector());
 		});
 
-		OklabColor baseOklab = ColorMath.RgbToOklab(bestMatch.Value.RgbValue.ToLinear());
+		OklabColor baseOklab = ColorMath.RgbToOklab(bestMatch.Value.RgbValue);
 
 		// Generate variations
 		for (int i = 0; i < 5; i++)
 		{
 			OklabColor variation = CreateSemanticVariation(baseOklab, request, i);
-			RgbColor rgb = ColorMath.OklabToRgb(variation).ToSRgb();
+			RgbColor rgb = ColorMath.OklabToRgb(variation);
 
 			// Clamp to valid RGB range
 			rgb = new RgbColor(
@@ -245,12 +245,12 @@ public sealed class SemanticPaletteEngine(ThemeDefinition theme, int? seed = nul
 	[System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "<Pending>")]
 	private ColorCandidate FindMostHarmoniousCandidate(List<ColorCandidate> candidates, RgbColor targetColor, float weight)
 	{
-		OklabColor targetOklab = ColorMath.RgbToOklab(targetColor.ToLinear());
+		OklabColor targetOklab = ColorMath.RgbToOklab(targetColor);
 
 		return candidates
 			.Select(candidate =>
 			{
-				OklabColor candidateOklab = ColorMath.RgbToOklab(candidate.Color.ToLinear());
+				OklabColor candidateOklab = ColorMath.RgbToOklab(candidate.Color);
 				float harmonyScore = CalculateHarmonyScore(candidateOklab, targetOklab);
 
 				return new { Candidate = candidate, HarmonyScore = (harmonyScore * weight) + (candidate.QualityScore * (1 - weight)) };
@@ -371,7 +371,7 @@ public sealed class SemanticPaletteEngine(ThemeDefinition theme, int? seed = nul
 		for (int i = 0; i < requests.Length; i++)
 		{
 			SemanticColorRequest request = requests[i];
-			OklabColor color = ColorMath.RgbToOklab(colors[i].ToLinear());
+			OklabColor color = ColorMath.RgbToOklab(colors[i]);
 
 			// Create target semantic vector
 			ColorProperties targetProperties = ColorProperties.FromRgb(
@@ -414,8 +414,8 @@ public sealed class SemanticPaletteEngine(ThemeDefinition theme, int? seed = nul
 		{
 			for (int j = i + 1; j < colors.Length; j++)
 			{
-				OklabColor oklab1 = ColorMath.RgbToOklab(colors[i].ToLinear());
-				OklabColor oklab2 = ColorMath.RgbToOklab(colors[j].ToLinear());
+				OklabColor oklab1 = ColorMath.RgbToOklab(colors[i]);
+				OklabColor oklab2 = ColorMath.RgbToOklab(colors[j]);
 
 				float harmony = CalculateHarmonyScore(oklab1, oklab2);
 

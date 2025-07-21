@@ -3,11 +3,13 @@
 // Licensed under the MIT license.
 
 namespace ktsu.ThemeProviderDemo;
+using System.Collections.Immutable;
 using System.Numerics;
 using Hexa.NET.ImGui;
 using ktsu.ImGuiApp;
 using ktsu.ThemeProvider.Core;
 using ktsu.ThemeProvider.Engines;
+using ktsu.ThemeProvider.ImGui;
 using ktsu.ThemeProvider.Semantic;
 using ktsu.ThemeProvider.Themes;
 using ktsu.ThemeProvider.Themes.Catppuccin;
@@ -16,9 +18,10 @@ internal static class Program
 {
 	private static ThemeDefinition theme = null!;
 	private static SemanticPaletteEngine paletteEngine = null!;
+	private static ImGuiPaletteMapper imguiMapper = null!;
 
 	// UI State
-	private static int selectedSemanticMeaning = (int)SemanticMeaning.Normal;
+	private static int selectedSemanticMeaning = (int)SemanticMeaning.Primary;
 	private static int selectedVisualRole = (int)VisualRole.Surface;
 	private static int selectedImportance = (int)ImportanceLevel.Medium;
 	private static bool isPrimary = true;
@@ -55,9 +58,10 @@ internal static class Program
 	{
 		theme = CatppuccinMocha.CreateTheme();
 		paletteEngine = new SemanticPaletteEngine(theme);
+		imguiMapper = new ImGuiPaletteMapper();
 
 		// Initialize with theme's primary text color
-		SemanticColorSpec textSpec = new(SemanticMeaning.Normal, VisualRole.Text, ImportanceLevel.Critical, isPrimary: true);
+		SemanticColorSpec textSpec = new(SemanticMeaning.Primary, VisualRole.Text, ImportanceLevel.Critical, isPrimary: true);
 		if (theme.TryGetColor(textSpec, out ColorProperties textColor))
 		{
 			selectedColorVec = new Vector3(textColor.RgbValue.R, textColor.RgbValue.G, textColor.RgbValue.B);
@@ -88,6 +92,12 @@ internal static class Program
 				ImGui.EndTabItem();
 			}
 
+			if (ImGui.BeginTabItem("ImGui Mapping"))
+			{
+				RenderImGuiMapping();
+				ImGui.EndTabItem();
+			}
+
 			if (ImGui.BeginTabItem("Accessibility"))
 			{
 				RenderAccessibilityDemo();
@@ -106,42 +116,20 @@ internal static class Program
 
 	private static void ApplyCatppuccinTheme()
 	{
+		// Use the new ImGui palette mapper system
+		ImmutableDictionary<ImGuiCol, Vector4> imguiColors = imguiMapper.MapTheme(theme);
+
 		ImGuiStylePtr style = ImGui.GetStyle();
 		Span<Vector4> colors = style.Colors;
 
-		// Get semantic colors from the theme
-		SemanticColorSpec baseSpec = new(SemanticMeaning.Normal, VisualRole.Background, ImportanceLevel.Low, isPrimary: true);
-		SemanticColorSpec textSpec = new(SemanticMeaning.Normal, VisualRole.Text, ImportanceLevel.Critical, isPrimary: true);
-		SemanticColorSpec surface0Spec = new(SemanticMeaning.Normal, VisualRole.Surface, ImportanceLevel.Low, isPrimary: true);
-		SemanticColorSpec surface1Spec = new(SemanticMeaning.Normal, VisualRole.Surface, ImportanceLevel.Medium, isPrimary: true);
-		SemanticColorSpec ctaSpec = new(SemanticMeaning.CallToAction, VisualRole.Widget, ImportanceLevel.Critical, isPrimary: true);
-		SemanticColorSpec successSpec = new(SemanticMeaning.Success, VisualRole.Widget, ImportanceLevel.High, isPrimary: true);
-		SemanticColorSpec errorSpec = new(SemanticMeaning.Error, VisualRole.Widget, ImportanceLevel.Critical, isPrimary: true);
-
-		ColorProperties baseColor = theme.GetColor(baseSpec);
-		ColorProperties textColor = theme.GetColor(textSpec);
-		ColorProperties surface0Color = theme.GetColor(surface0Spec);
-		ColorProperties surface1Color = theme.GetColor(surface1Spec);
-		ColorProperties ctaColor = theme.GetColor(ctaSpec);
-
-		// Apply semantic colors to ImGui
-		colors[(int)ImGuiCol.Text] = ToImVec4(textColor.RgbValue);
-		colors[(int)ImGuiCol.WindowBg] = ToImVec4(baseColor.RgbValue);
-		colors[(int)ImGuiCol.ChildBg] = ToImVec4(baseColor.RgbValue);
-		colors[(int)ImGuiCol.PopupBg] = ToImVec4(surface0Color.RgbValue);
-		colors[(int)ImGuiCol.FrameBg] = ToImVec4(surface0Color.RgbValue);
-		colors[(int)ImGuiCol.FrameBgHovered] = ToImVec4(surface1Color.RgbValue);
-		colors[(int)ImGuiCol.Button] = ToImVec4(ctaColor.RgbValue);
-		colors[(int)ImGuiCol.ButtonHovered] = ToImVec4(AdjustBrightness(ctaColor.RgbValue, 1.1f));
-		colors[(int)ImGuiCol.ButtonActive] = ToImVec4(AdjustBrightness(ctaColor.RgbValue, 0.9f));
-		colors[(int)ImGuiCol.Header] = ToImVec4(surface0Color.RgbValue);
-		colors[(int)ImGuiCol.HeaderHovered] = ToImVec4(surface1Color.RgbValue);
-		colors[(int)ImGuiCol.HeaderActive] = ToImVec4(surface1Color.RgbValue);
-
-		// Additional semantic colors
-		if (theme.TryGetColor(new(SemanticMeaning.Normal, VisualRole.Text, ImportanceLevel.Medium, isPrimary: false), out ColorProperties subtextColor))
+		// Apply all mapped colors with bounds checking
+		foreach ((ImGuiCol colorKey, Vector4 colorValue) in imguiColors)
 		{
-			colors[(int)ImGuiCol.TextDisabled] = ToImVec4(subtextColor.RgbValue);
+			int colorIndex = (int)colorKey;
+			if (colorIndex >= 0 && colorIndex < colors.Length)
+			{
+				colors[colorIndex] = colorValue;
+			}
 		}
 	}
 
@@ -345,7 +333,7 @@ internal static class Program
 	private static void GenerateSemanticPalette()
 	{
 		// Get base background color for contrast calculations
-		SemanticColorSpec baseSpec = new(SemanticMeaning.Normal, VisualRole.Background, ImportanceLevel.Low, isPrimary: true);
+		SemanticColorSpec baseSpec = new(SemanticMeaning.Primary, VisualRole.Background, ImportanceLevel.Low, isPrimary: true);
 		ColorProperties baseColor = theme.GetColor(baseSpec);
 
 		// Create a semantic graph with various color requests
@@ -629,6 +617,70 @@ internal static class Program
 		{
 			ImGui.TextColored(ToImVec4(infoText.RgbValue), "Information: Additional details available");
 		}
+	}
+
+	private static void RenderImGuiMapping()
+	{
+		ImGui.TextUnformatted("Systematic ImGui palette mapping from semantic theme:");
+		ImGui.Separator();
+
+		// Show mapper info
+		ImGui.TextUnformatted($"Framework: {imguiMapper.FrameworkName}");
+
+		// Get the mapped colors
+		ImmutableDictionary<ImGuiCol, Vector4> mappedColors = imguiMapper.MapTheme(theme);
+		ImmutableDictionary<string, object> metadata = imguiMapper.GetMappingMetadata(theme);
+
+		ImGui.TextUnformatted($"Total Mapped Colors: {mappedColors.Count}");
+		ImGui.TextUnformatted($"Generation Time: {metadata["generation_time"]}");
+
+		ImGui.Separator();
+		ImGui.TextUnformatted("Complete ImGui Color Mapping:");
+
+		// Show all mapped colors in a table
+		if (ImGui.BeginTable("ImGuiColorTable", 3, ImGuiTableFlags.Borders | ImGuiTableFlags.RowBg))
+		{
+			ImGui.TableSetupColumn("ImGui Color");
+			ImGui.TableSetupColumn("Color Preview");
+			ImGui.TableSetupColumn("RGB Values");
+			ImGui.TableHeadersRow();
+
+			foreach ((ImGuiCol colorKey, Vector4 colorValue) in mappedColors.OrderBy(kvp => kvp.Key.ToString()))
+			{
+				ImGui.TableNextRow();
+
+				ImGui.TableSetColumnIndex(0);
+				ImGui.TextUnformatted(colorKey.ToString());
+
+				ImGui.TableSetColumnIndex(1);
+				// Color swatch
+				ImDrawListPtr drawList = ImGui.GetWindowDrawList();
+				Vector2 pos = ImGui.GetCursorScreenPos();
+				float swatchSize = 20f;
+				drawList.AddRectFilled(pos, new Vector2(pos.X + swatchSize, pos.Y + swatchSize),
+									   ImGui.ColorConvertFloat4ToU32(colorValue));
+				drawList.AddRect(pos, new Vector2(pos.X + swatchSize, pos.Y + swatchSize),
+								ImGui.ColorConvertFloat4ToU32(new Vector4(1, 1, 1, 0.3f)));
+				ImGui.Dummy(new Vector2(swatchSize, swatchSize));
+
+				ImGui.TableSetColumnIndex(2);
+				ImGui.TextUnformatted($"({colorValue.X:F3}, {colorValue.Y:F3}, {colorValue.Z:F3}, {colorValue.W:F3})");
+			}
+
+			ImGui.EndTable();
+		}
+
+		ImGui.Separator();
+		ImGui.TextUnformatted("Benefits of Systematic Palette Mapping:");
+		ImGui.BulletText("Consistent semantic color usage across all ImGui elements");
+		ImGui.BulletText("Automatic fallback to sensible defaults for unmapped colors");
+		ImGui.BulletText("Easy to adapt to other UI frameworks using the same pattern");
+		ImGui.BulletText("Maintains theme authenticity while ensuring proper contrast");
+		ImGui.BulletText("Brightness adjustments for interactive states (hover/active)");
+
+		ImGui.Separator();
+		ImGui.TextUnformatted("Framework Integration Example:");
+		ImGui.Text("// Apply complete theme with one line:\nImGuiColors = mapper.MapTheme(theme);\n\n// Instead of manually mapping dozens of colors:\n// colors[ImGuiCol.Text] = theme.GetColor(...);\n// colors[ImGuiCol.Button] = theme.GetColor(...);\n// ... (50+ more lines)");
 	}
 
 	private static Vector4 ToImVec4(RgbColor color, float alpha = 1.0f) => new(color.R, color.G, color.B, alpha);

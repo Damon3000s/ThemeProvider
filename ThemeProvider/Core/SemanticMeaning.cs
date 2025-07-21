@@ -12,8 +12,8 @@ namespace ktsu.ThemeProvider.Core;
 public enum SemanticMeaning
 {
 	// Core semantic meanings for hue assignment
-	Normal,      // Default/neutral content
-	Emphasis,    // Emphasized content requiring attention
+	Primary,     // Primary/default content and interactions
+	Secondary,   // Secondary content requiring less attention
 	Success,     // Successful operations, confirmations
 	CallToAction, // Primary actions, buttons user should take
 	Information, // Informational content, help text

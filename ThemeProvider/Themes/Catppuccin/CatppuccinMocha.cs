@@ -39,76 +39,76 @@ public static class CatppuccinMocha
 		}
 
 		// Background hierarchy (lowest elevation in dark theme)
-		SemanticColorSpec baseSpec = new(SemanticMeaning.Normal, VisualRole.Background, ImportanceLevel.Low, isPrimary: true);
+		SemanticColorSpec baseSpec = new(SemanticMeaning.Primary, VisualRole.Background, ImportanceLevel.Low, isPrimary: true);
 		CatppuccinMochaPalette.PaletteColor baseColor = CatppuccinMochaSemanticMapping.GetBackgroundColor(baseSpec);
 		builder.WithColor(baseSpec, baseColor.HexValue,
 			weight: baseColor.Properties.Weight, temperature: baseColor.Properties.Temperature, energy: baseColor.Properties.Energy,
 			formality: baseColor.Properties.Formality, accessibilityPriority: baseColor.Properties.AccessibilityPriority);
 
-		SemanticColorSpec mantleSpec = new(SemanticMeaning.Normal, VisualRole.Background, ImportanceLevel.Medium, isPrimary: false);
+		SemanticColorSpec mantleSpec = new(SemanticMeaning.Primary, VisualRole.Background, ImportanceLevel.Medium, isPrimary: false);
 		CatppuccinMochaPalette.PaletteColor mantleColor = CatppuccinMochaPalette.Mantle;
 		builder.WithColor(mantleSpec, mantleColor.HexValue,
 			weight: mantleColor.Properties.Weight, temperature: mantleColor.Properties.Temperature, energy: mantleColor.Properties.Energy,
 			formality: mantleColor.Properties.Formality, accessibilityPriority: mantleColor.Properties.AccessibilityPriority);
 
-		SemanticColorSpec crustSpec = new(SemanticMeaning.Normal, VisualRole.Background, ImportanceLevel.Low, isPrimary: false);
+		SemanticColorSpec crustSpec = new(SemanticMeaning.Primary, VisualRole.Background, ImportanceLevel.Low, isPrimary: false);
 		CatppuccinMochaPalette.PaletteColor crustColor = CatppuccinMochaPalette.Crust;
 		builder.WithColor(crustSpec, crustColor.HexValue,
 			weight: crustColor.Properties.Weight, temperature: crustColor.Properties.Temperature, energy: crustColor.Properties.Energy,
 			formality: crustColor.Properties.Formality, accessibilityPriority: crustColor.Properties.AccessibilityPriority);
 
 		// Surface hierarchy (medium elevation)
-		SemanticColorSpec surface0Spec = new(SemanticMeaning.Normal, VisualRole.Surface, ImportanceLevel.Low, isPrimary: true);
+		SemanticColorSpec surface0Spec = new(SemanticMeaning.Primary, VisualRole.Surface, ImportanceLevel.Low, isPrimary: true);
 		CatppuccinMochaPalette.PaletteColor surface0Color = CatppuccinMochaSemanticMapping.GetSurfaceColor(surface0Spec);
 		builder.WithColor(surface0Spec, surface0Color.HexValue,
 			weight: surface0Color.Properties.Weight, temperature: surface0Color.Properties.Temperature, energy: surface0Color.Properties.Energy,
 			formality: surface0Color.Properties.Formality, accessibilityPriority: surface0Color.Properties.AccessibilityPriority);
 
-		SemanticColorSpec surface1Spec = new(SemanticMeaning.Normal, VisualRole.Surface, ImportanceLevel.Medium, isPrimary: true);
+		SemanticColorSpec surface1Spec = new(SemanticMeaning.Primary, VisualRole.Surface, ImportanceLevel.Medium, isPrimary: true);
 		CatppuccinMochaPalette.PaletteColor surface1Color = CatppuccinMochaSemanticMapping.GetSurfaceColor(surface1Spec);
 		builder.WithColor(surface1Spec, surface1Color.HexValue,
 			weight: surface1Color.Properties.Weight, temperature: surface1Color.Properties.Temperature, energy: surface1Color.Properties.Energy,
 			formality: surface1Color.Properties.Formality, accessibilityPriority: surface1Color.Properties.AccessibilityPriority);
 
-		SemanticColorSpec surface2Spec = new(SemanticMeaning.Normal, VisualRole.Surface, ImportanceLevel.High, isPrimary: true);
+		SemanticColorSpec surface2Spec = new(SemanticMeaning.Primary, VisualRole.Surface, ImportanceLevel.High, isPrimary: true);
 		CatppuccinMochaPalette.PaletteColor surface2Color = CatppuccinMochaSemanticMapping.GetSurfaceColor(surface2Spec);
 		builder.WithColor(surface2Spec, surface2Color.HexValue,
 			weight: surface2Color.Properties.Weight, temperature: surface2Color.Properties.Temperature, energy: surface2Color.Properties.Energy,
 			formality: surface2Color.Properties.Formality, accessibilityPriority: surface2Color.Properties.AccessibilityPriority);
 
 		// Surface overlays (semi-transparent conceptually)
-		SemanticColorSpec overlay0Spec = new(SemanticMeaning.Normal, VisualRole.Surface, ImportanceLevel.Low, isPrimary: false);
+		SemanticColorSpec overlay0Spec = new(SemanticMeaning.Primary, VisualRole.Surface, ImportanceLevel.Low, isPrimary: false);
 		CatppuccinMochaPalette.PaletteColor overlay0Color = CatppuccinMochaSemanticMapping.GetSurfaceColor(overlay0Spec);
 		builder.WithColor(overlay0Spec, overlay0Color.HexValue,
 			weight: overlay0Color.Properties.Weight, temperature: overlay0Color.Properties.Temperature, energy: overlay0Color.Properties.Energy,
 			formality: overlay0Color.Properties.Formality, accessibilityPriority: overlay0Color.Properties.AccessibilityPriority);
 
-		SemanticColorSpec overlay1Spec = new(SemanticMeaning.Normal, VisualRole.Surface, ImportanceLevel.Medium, isPrimary: false);
+		SemanticColorSpec overlay1Spec = new(SemanticMeaning.Primary, VisualRole.Surface, ImportanceLevel.Medium, isPrimary: false);
 		CatppuccinMochaPalette.PaletteColor overlay1Color = CatppuccinMochaSemanticMapping.GetSurfaceColor(overlay1Spec);
 		builder.WithColor(overlay1Spec, overlay1Color.HexValue,
 			weight: overlay1Color.Properties.Weight, temperature: overlay1Color.Properties.Temperature, energy: overlay1Color.Properties.Energy,
 			formality: overlay1Color.Properties.Formality, accessibilityPriority: overlay1Color.Properties.AccessibilityPriority);
 
-		SemanticColorSpec overlay2Spec = new(SemanticMeaning.Normal, VisualRole.Surface, ImportanceLevel.High, isPrimary: false);
+		SemanticColorSpec overlay2Spec = new(SemanticMeaning.Primary, VisualRole.Surface, ImportanceLevel.High, isPrimary: false);
 		CatppuccinMochaPalette.PaletteColor overlay2Color = CatppuccinMochaSemanticMapping.GetSurfaceColor(overlay2Spec);
 		builder.WithColor(overlay2Spec, overlay2Color.HexValue,
 			weight: overlay2Color.Properties.Weight, temperature: overlay2Color.Properties.Temperature, energy: overlay2Color.Properties.Energy,
 			formality: overlay2Color.Properties.Formality, accessibilityPriority: overlay2Color.Properties.AccessibilityPriority);
 
 		// Text hierarchy (highest elevation in dark theme)
-		SemanticColorSpec textSpec = new(SemanticMeaning.Normal, VisualRole.Text, ImportanceLevel.Critical, isPrimary: true);
+		SemanticColorSpec textSpec = new(SemanticMeaning.Primary, VisualRole.Text, ImportanceLevel.Critical, isPrimary: true);
 		CatppuccinMochaPalette.PaletteColor textColor = CatppuccinMochaSemanticMapping.GetTextColor(textSpec);
 		builder.WithColor(textSpec, textColor.HexValue,
 			weight: textColor.Properties.Weight, temperature: textColor.Properties.Temperature, energy: textColor.Properties.Energy,
 			formality: textColor.Properties.Formality, accessibilityPriority: textColor.Properties.AccessibilityPriority);
 
-		SemanticColorSpec subtext1Spec = new(SemanticMeaning.Normal, VisualRole.Text, ImportanceLevel.High, isPrimary: false);
+		SemanticColorSpec subtext1Spec = new(SemanticMeaning.Primary, VisualRole.Text, ImportanceLevel.High, isPrimary: false);
 		CatppuccinMochaPalette.PaletteColor subtext1Color = CatppuccinMochaSemanticMapping.GetTextColor(subtext1Spec);
 		builder.WithColor(subtext1Spec, subtext1Color.HexValue,
 			weight: subtext1Color.Properties.Weight, temperature: subtext1Color.Properties.Temperature, energy: subtext1Color.Properties.Energy,
 			formality: subtext1Color.Properties.Formality, accessibilityPriority: subtext1Color.Properties.AccessibilityPriority);
 
-		SemanticColorSpec subtext0Spec = new(SemanticMeaning.Normal, VisualRole.Text, ImportanceLevel.Medium, isPrimary: false);
+		SemanticColorSpec subtext0Spec = new(SemanticMeaning.Primary, VisualRole.Text, ImportanceLevel.Medium, isPrimary: false);
 		CatppuccinMochaPalette.PaletteColor subtext0Color = CatppuccinMochaSemanticMapping.GetTextColor(subtext0Spec);
 		builder.WithColor(subtext0Spec, subtext0Color.HexValue,
 			weight: subtext0Color.Properties.Weight, temperature: subtext0Color.Properties.Temperature, energy: subtext0Color.Properties.Energy,
@@ -152,7 +152,7 @@ public static class CatppuccinMocha
 			weight: ctaWidgetColor.Properties.Weight, temperature: ctaWidgetColor.Properties.Temperature, energy: ctaWidgetColor.Properties.Energy,
 			formality: ctaWidgetColor.Properties.Formality, accessibilityPriority: ctaWidgetColor.Properties.AccessibilityPriority);
 
-		SemanticColorSpec normalWidgetSpec = new(SemanticMeaning.Normal, VisualRole.Widget, ImportanceLevel.Medium, isPrimary: false);
+		SemanticColorSpec normalWidgetSpec = new(SemanticMeaning.Primary, VisualRole.Widget, ImportanceLevel.Medium, isPrimary: false);
 		CatppuccinMochaPalette.PaletteColor normalWidgetColor = CatppuccinMochaSemanticMapping.GetWidgetColor(normalWidgetSpec);
 		builder.WithColor(normalWidgetSpec, normalWidgetColor.HexValue,
 			weight: normalWidgetColor.Properties.Weight, temperature: normalWidgetColor.Properties.Temperature, energy: normalWidgetColor.Properties.Energy,
@@ -183,7 +183,7 @@ public static class CatppuccinMocha
 			formality: infoWidgetColor.Properties.Formality, accessibilityPriority: infoWidgetColor.Properties.AccessibilityPriority);
 
 		// Additional accent colors for variety
-		SemanticColorSpec emphasisWidgetSpec = new(SemanticMeaning.Emphasis, VisualRole.Widget, ImportanceLevel.High, isPrimary: true);
+		SemanticColorSpec emphasisWidgetSpec = new(SemanticMeaning.Secondary, VisualRole.Widget, ImportanceLevel.High, isPrimary: true);
 		CatppuccinMochaPalette.PaletteColor emphasisWidgetColor = CatppuccinMochaSemanticMapping.GetWidgetColor(emphasisWidgetSpec);
 		builder.WithColor(emphasisWidgetSpec, emphasisWidgetColor.HexValue,
 			weight: emphasisWidgetColor.Properties.Weight, temperature: emphasisWidgetColor.Properties.Temperature, energy: emphasisWidgetColor.Properties.Energy,
@@ -196,13 +196,13 @@ public static class CatppuccinMocha
 			formality: debugWidgetColor.Properties.Formality, accessibilityPriority: debugWidgetColor.Properties.AccessibilityPriority);
 
 		// Additional semantic variations
-		SemanticColorSpec normalLowWidgetSpec = new(SemanticMeaning.Normal, VisualRole.Widget, ImportanceLevel.Low, isPrimary: true);
+		SemanticColorSpec normalLowWidgetSpec = new(SemanticMeaning.Primary, VisualRole.Widget, ImportanceLevel.Low, isPrimary: true);
 		CatppuccinMochaPalette.PaletteColor normalLowWidgetColor = CatppuccinMochaSemanticMapping.GetWidgetColor(normalLowWidgetSpec);
 		builder.WithColor(normalLowWidgetSpec, normalLowWidgetColor.HexValue,
 			weight: normalLowWidgetColor.Properties.Weight, temperature: normalLowWidgetColor.Properties.Temperature, energy: normalLowWidgetColor.Properties.Energy,
 			formality: normalLowWidgetColor.Properties.Formality, accessibilityPriority: normalLowWidgetColor.Properties.AccessibilityPriority);
 
-		SemanticColorSpec emphasisTextSpec = new(SemanticMeaning.Emphasis, VisualRole.Text, ImportanceLevel.Medium, isPrimary: true);
+		SemanticColorSpec emphasisTextSpec = new(SemanticMeaning.Secondary, VisualRole.Text, ImportanceLevel.Medium, isPrimary: true);
 		CatppuccinMochaPalette.PaletteColor emphasisTextColor = CatppuccinMochaSemanticMapping.GetTextColor(emphasisTextSpec);
 		builder.WithColor(emphasisTextSpec, emphasisTextColor.HexValue,
 			weight: emphasisTextColor.Properties.Weight, temperature: emphasisTextColor.Properties.Temperature, energy: emphasisTextColor.Properties.Energy,

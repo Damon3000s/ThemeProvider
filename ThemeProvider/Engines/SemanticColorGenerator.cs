@@ -22,8 +22,8 @@ public sealed class SemanticColorGenerator(bool isDarkTheme, IReadOnlyDictionary
 	public static readonly IReadOnlyDictionary<SemanticMeaning, float> DefaultSemanticHues =
 		new Dictionary<SemanticMeaning, float>
 		{
-			[SemanticMeaning.Normal] = 220f,        // Blue-ish neutral
-			[SemanticMeaning.Emphasis] = 45f,       // Orange for attention
+			[SemanticMeaning.Primary] = 220f,        // Blue-ish neutral
+			[SemanticMeaning.Secondary] = 45f,       // Orange for attention
 			[SemanticMeaning.Success] = 120f,       // Green
 			[SemanticMeaning.CallToAction] = 240f,  // Purple for primary actions
 			[SemanticMeaning.Information] = 200f,   // Light blue
@@ -50,7 +50,7 @@ public sealed class SemanticColorGenerator(bool isDarkTheme, IReadOnlyDictionary
 		OklabColor oklab = OklabColor.FromPolar(lightness, chroma, hue);
 
 		// Convert to RGB and clamp to valid range
-		RgbColor rgb = ColorMath.OklabToRgb(oklab).ToSRgb();
+		RgbColor rgb = ColorMath.OklabToRgb(oklab);
 		return new RgbColor(
 			Math.Clamp(rgb.R, 0f, 1f),
 			Math.Clamp(rgb.G, 0f, 1f),
@@ -108,17 +108,17 @@ public sealed class SemanticColorGenerator(bool isDarkTheme, IReadOnlyDictionary
 		// Define comprehensive set of UI color specifications
 		List<SemanticColorSpec> specs = [
 			// Backgrounds
-			new(SemanticMeaning.Normal, VisualRole.Background, ImportanceLevel.Low, true),
+			new(SemanticMeaning.Primary, VisualRole.Background, ImportanceLevel.Low, true),
 
 			// Surfaces
-			new(SemanticMeaning.Normal, VisualRole.Surface, ImportanceLevel.Low, true),
-			new(SemanticMeaning.Normal, VisualRole.Surface, ImportanceLevel.Medium, true),
-			new(SemanticMeaning.Normal, VisualRole.Surface, ImportanceLevel.High, true),
-			new(SemanticMeaning.Emphasis, VisualRole.Surface, ImportanceLevel.Medium, true),
+			new(SemanticMeaning.Primary, VisualRole.Surface, ImportanceLevel.Low, true),
+			new(SemanticMeaning.Primary, VisualRole.Surface, ImportanceLevel.Medium, true),
+			new(SemanticMeaning.Primary, VisualRole.Surface, ImportanceLevel.High, true),
+			new(SemanticMeaning.Secondary, VisualRole.Surface, ImportanceLevel.Medium, true),
 
 			// Text hierarchy
-			new(SemanticMeaning.Normal, VisualRole.Text, ImportanceLevel.Critical, true),  // Primary text
-			new(SemanticMeaning.Normal, VisualRole.Text, ImportanceLevel.Medium, false),   // Secondary text
+			new(SemanticMeaning.Primary, VisualRole.Text, ImportanceLevel.Critical, true),  // Primary text
+			new(SemanticMeaning.Primary, VisualRole.Text, ImportanceLevel.Medium, false),   // Secondary text
 
 			// Semantic text colors
 			new(SemanticMeaning.Success, VisualRole.Text, ImportanceLevel.High, true),
@@ -129,7 +129,7 @@ public sealed class SemanticColorGenerator(bool isDarkTheme, IReadOnlyDictionary
 
 			// Widget/accent colors
 			new(SemanticMeaning.CallToAction, VisualRole.Widget, ImportanceLevel.Critical, true), // Primary button
-			new(SemanticMeaning.Normal, VisualRole.Widget, ImportanceLevel.Medium, false),        // Secondary button
+			new(SemanticMeaning.Primary, VisualRole.Widget, ImportanceLevel.Medium, false),        // Secondary button
 			new(SemanticMeaning.Success, VisualRole.Widget, ImportanceLevel.High, true),
 			new(SemanticMeaning.Warning, VisualRole.Widget, ImportanceLevel.High, true),
 			new(SemanticMeaning.Error, VisualRole.Widget, ImportanceLevel.Critical, true),
@@ -219,7 +219,7 @@ public sealed class SemanticColorGenerator(bool isDarkTheme, IReadOnlyDictionary
 			SemanticMeaning.CallToAction => 0.9f,
 			SemanticMeaning.Error => 0.8f,
 			SemanticMeaning.Warning => 0.7f,
-			SemanticMeaning.Emphasis => 0.8f,
+			SemanticMeaning.Secondary => 0.8f,
 			SemanticMeaning.Success => 0.6f,
 			SemanticMeaning.Debug => 0.3f,
 			_ => 0.5f

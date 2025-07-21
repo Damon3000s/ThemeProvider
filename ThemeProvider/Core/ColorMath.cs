@@ -221,11 +221,9 @@ public static class ColorMath
 	/// Calculates the relative luminance of a color according to WCAG standards.
 	/// Used for contrast ratio calculations.
 	/// </summary>
-	public static float GetRelativeLuminance(RgbColor rgb)
-	{
-		RgbColor linear = rgb.ToLinear();
-		return (0.2126f * linear.R) + (0.7152f * linear.G) + (0.0722f * linear.B);
-	}
+	public static float GetRelativeLuminance(RgbColor rgb) =>
+		// Input RGB values are already linear, no gamma correction needed
+		(0.2126f * rgb.R) + (0.7152f * rgb.G) + (0.0722f * rgb.B);
 
 	/// <summary>
 	/// Calculates the WCAG contrast ratio between two colors.
@@ -277,7 +275,7 @@ public static class ColorMath
 			_ => 1.0f
 		};
 
-		OklabColor oklabFg = RgbToOklab(foreground.ToLinear());
+		OklabColor oklabFg = RgbToOklab(foreground);
 		float backgroundLum = GetRelativeLuminance(background);
 
 		// Binary search for the right lightness adjustment
@@ -287,7 +285,7 @@ public static class ColorMath
 		for (int i = 0; i < maxIterations; i++)
 		{
 			OklabColor adjusted = new((minL + maxL) / 2f, oklabFg.A, oklabFg.B);
-			RgbColor adjustedRgb = OklabToRgb(adjusted).ToSRgb();
+			RgbColor adjustedRgb = OklabToRgb(adjusted);
 
 			// Clamp to valid RGB range
 			adjustedRgb = new RgbColor(
@@ -343,8 +341,8 @@ public static class ColorMath
 			throw new ArgumentException("Gradient must have at least 2 steps", nameof(steps));
 		}
 
-		OklabColor fromOklab = RgbToOklab(from.ToLinear());
-		OklabColor toOklab = RgbToOklab(to.ToLinear());
+		OklabColor fromOklab = RgbToOklab(from);
+		OklabColor toOklab = RgbToOklab(to);
 
 		RgbColor[] gradient = new RgbColor[steps];
 
@@ -352,7 +350,7 @@ public static class ColorMath
 		{
 			float t = i / (float)(steps - 1);
 			OklabColor interpolated = OklabColor.Lerp(fromOklab, toOklab, t);
-			gradient[i] = OklabToRgb(interpolated).ToSRgb();
+			gradient[i] = OklabToRgb(interpolated);
 		}
 
 		return gradient;
