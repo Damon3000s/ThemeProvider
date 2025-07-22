@@ -82,7 +82,7 @@ public sealed class SemanticColorMapper
 	/// </summary>
 	/// <param name="theme">The semantic theme to generate the complete palette from</param>
 	/// <returns>A dictionary mapping every possible semantic color request to its assigned color</returns>
-	public static ImmutableDictionary<SemanticColorRequest, PerceptualColor> GetCompletePalette(ISemanticTheme theme)
+	public static ImmutableDictionary<SemanticColorRequest, PerceptualColor> MakeCompletePalette(ISemanticTheme theme)
 	{
 		ArgumentNullException.ThrowIfNull(theme);
 

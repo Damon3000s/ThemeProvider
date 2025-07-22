@@ -219,7 +219,7 @@ internal static class Program
 		ImGui.Separator();
 
 		// Show complete palette info
-		ImmutableDictionary<SemanticColorRequest, PerceptualColor> completePalette = SemanticColorMapper.GetCompletePalette(theme);
+		ImmutableDictionary<SemanticColorRequest, PerceptualColor> completePalette = SemanticColorMapper.MakeCompletePalette(theme);
 		ImGui.TextUnformatted($"Complete Palette: {completePalette.Count} colors generated");
 		ImGui.TextUnformatted($"Available Semantic Meanings: {theme.SemanticMapping.Count}");
 
@@ -744,7 +744,7 @@ internal static class Program
 		if (cachedTheme != theme || cachedCompletePalette == null)
 		{
 			// Generate complete palette for entire theme (more efficient than individual requests)
-			cachedCompletePalette = SemanticColorMapper.GetCompletePalette(theme);
+			cachedCompletePalette = SemanticColorMapper.MakeCompletePalette(theme);
 			cachedTheme = theme;
 		}
 
@@ -757,7 +757,7 @@ internal static class Program
 		if (cachedTheme != theme || cachedCompletePalette == null)
 		{
 			// Generate complete palette for entire theme
-			cachedCompletePalette = SemanticColorMapper.GetCompletePalette(theme);
+			cachedCompletePalette = SemanticColorMapper.MakeCompletePalette(theme);
 			cachedTheme = theme;
 		}
 

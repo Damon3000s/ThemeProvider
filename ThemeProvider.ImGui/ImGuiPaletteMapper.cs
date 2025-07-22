@@ -27,7 +27,7 @@ public sealed class ImGuiPaletteMapper : IPaletteMapper<ImGuiCol, Vector4>
 		ArgumentNullException.ThrowIfNull(theme);
 
 		// Get the complete palette for the theme (more efficient than individual requests)
-		ImmutableDictionary<SemanticColorRequest, PerceptualColor> completePalette = SemanticColorMapper.GetCompletePalette(theme);
+		ImmutableDictionary<SemanticColorRequest, PerceptualColor> completePalette = SemanticColorMapper.MakeCompletePalette(theme);
 
 		// Define the mapping from ImGui colors to semantic color requests
 		Dictionary<ImGuiCol, SemanticColorRequest> colorMapping = new()
