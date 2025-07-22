@@ -45,12 +45,12 @@ public sealed class ImGuiPaletteMapper : IPaletteMapper<ImGuiCol, Vector4>
 
 			// Primary elements now use more spread out priorities to maximize contrast within the 50-90% range
 			{ ImGuiCol.Button, new(SemanticMeaning.Primary, Priority.Medium)},
-			{ ImGuiCol.ButtonHovered, new(SemanticMeaning.Alternate, Priority.Medium)},
-			{ ImGuiCol.ButtonActive, new(SemanticMeaning.Alternate, Priority.VeryHigh)},
+			{ ImGuiCol.ButtonHovered, new(SemanticMeaning.Primary, Priority.High)},
+			{ ImGuiCol.ButtonActive, new(SemanticMeaning.Primary, Priority.VeryHigh)},
 
 			{ ImGuiCol.Header, new(SemanticMeaning.Primary, Priority.Medium)},
-			{ ImGuiCol.HeaderHovered, new(SemanticMeaning.Alternate, Priority.Medium)},
-			{ ImGuiCol.HeaderActive, new(SemanticMeaning.Alternate, Priority.VeryHigh)},
+			{ ImGuiCol.HeaderHovered, new(SemanticMeaning.Primary, Priority.High)},
+			{ ImGuiCol.HeaderActive, new(SemanticMeaning.Primary, Priority.VeryHigh)},
 
 			{ ImGuiCol.CheckMark, new(SemanticMeaning.Primary, Priority.High)},
 
@@ -69,7 +69,7 @@ public sealed class ImGuiPaletteMapper : IPaletteMapper<ImGuiCol, Vector4>
 
 			{ ImGuiCol.Tab, new(SemanticMeaning.Neutral, Priority.Medium)},
 			{ ImGuiCol.TabSelected, new(SemanticMeaning.Primary, Priority.Medium)},
-			{ ImGuiCol.TabHovered, new(SemanticMeaning.Alternate, Priority.Medium)},
+			{ ImGuiCol.TabHovered, new(SemanticMeaning.Primary, Priority.High)},
 
 			// Alternate elements spread across the full 50-90% range for better contrast
 			{ ImGuiCol.PlotLines, new(SemanticMeaning.Alternate, Priority.Medium)},
@@ -78,11 +78,11 @@ public sealed class ImGuiPaletteMapper : IPaletteMapper<ImGuiCol, Vector4>
 			{ ImGuiCol.PlotHistogram, new(SemanticMeaning.Alternate, Priority.Medium)},
 			{ ImGuiCol.PlotHistogramHovered, new(SemanticMeaning.Alternate, Priority.High)},
 
-			{ ImGuiCol.TableHeaderBg, new(SemanticMeaning.Primary, Priority.Medium)},
+			{ ImGuiCol.TableHeaderBg, new(SemanticMeaning.Neutral, Priority.Medium)},
 			{ ImGuiCol.TableBorderStrong, new(SemanticMeaning.Neutral, Priority.Medium)},
 			{ ImGuiCol.TableBorderLight, new(SemanticMeaning.Neutral, Priority.Medium)},
-			{ ImGuiCol.TableRowBg, new(SemanticMeaning.Neutral, Priority.Low) },
-			{ ImGuiCol.TableRowBgAlt, new(SemanticMeaning.Neutral, Priority.MediumLow) },
+			{ ImGuiCol.TableRowBg, new(SemanticMeaning.Neutral, Priority.VeryLow) },
+			{ ImGuiCol.TableRowBgAlt, new(SemanticMeaning.Neutral, Priority.Low) },
 
 			{ ImGuiCol.TextSelectedBg, new(SemanticMeaning.Alternate, Priority.High) },
 
