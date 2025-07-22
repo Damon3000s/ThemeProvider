@@ -1,5 +1,5 @@
-## v1.0.6-pre.1 (prerelease)
+## v1.0.6 (patch)
 
 Changes since v1.0.5:
 
-- Update package versions and UI color mappings ([@matt-edmondson](https://github.com/matt-edmondson))
+- [patch] Force patch ([@matt-edmondson](https://github.com/matt-edmondson))
