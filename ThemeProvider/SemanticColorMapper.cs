@@ -77,6 +77,42 @@ public sealed class SemanticColorMapper
 	}
 
 	/// <summary>
+	/// Generates a complete palette containing all possible combinations of semantic meanings and priorities from the theme.
+	/// This provides every color that can be requested from the theme, useful for theme exploration, previews, and pre-generation.
+	/// </summary>
+	/// <param name="theme">The semantic theme to generate the complete palette from</param>
+	/// <returns>A dictionary mapping every possible semantic color request to its assigned color</returns>
+	public static ImmutableDictionary<SemanticColorRequest, PerceptualColor> GetCompletePalette(ISemanticTheme theme)
+	{
+		ArgumentNullException.ThrowIfNull(theme);
+
+		// Get all available semantic meanings from the theme
+		HashSet<SemanticMeaning> availableMeanings = [.. theme.SemanticMapping.Keys];
+
+		if (availableMeanings.Count == 0)
+		{
+			return ImmutableDictionary<SemanticColorRequest, PerceptualColor>.Empty;
+		}
+
+		// Get all possible priorities
+		Priority[] allPriorities = Enum.GetValues<Priority>();
+
+		// Generate requests for all combinations of meanings and priorities
+		List<SemanticColorRequest> allPossibleRequests = [];
+		foreach (SemanticMeaning meaning in availableMeanings)
+		{
+			foreach (Priority priority in allPriorities)
+			{
+				allPossibleRequests.Add(new SemanticColorRequest(meaning, priority));
+			}
+		}
+
+		// Use the existing MapColors method to generate the complete palette
+		// This ensures consistency with individual color requests
+		return MapColors(allPossibleRequests, theme);
+	}
+
+	/// <summary>
 	/// Calculates the lightness range across all available semantics in the theme.
 	/// This range will be used as the basis for all semantic color mappings.
 	/// </summary>

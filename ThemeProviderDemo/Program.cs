@@ -36,10 +36,6 @@ internal static class Program
 	private static bool checkboxValue;
 	private static string textValue = "Text Input";
 
-	// Cache for complete semantic mappings
-	private static SemanticMeaning? cachedMeaning;
-	private static ImmutableDictionary<SemanticColorRequest, PerceptualColor>? cachedMapping;
-
 	private static void Main()
 	{
 		ImGuiApp.Start(new()
@@ -187,8 +183,8 @@ internal static class Program
 								{
 									selectedThemeIndex = j;
 									theme = themeInfo.CreateInstance();
-									cachedMeaning = null;
-									cachedMapping = null;
+									cachedTheme = null;
+									cachedCompletePalette = null;
 									break;
 								}
 							}
@@ -215,11 +211,18 @@ internal static class Program
 		{
 			theme = availableThemes[selectedThemeIndex].CreateInstance();
 			// Clear cache when theme changes
-			cachedMeaning = null;
-			cachedMapping = null;
+			cachedTheme = null;
+			cachedCompletePalette = null;
 		}
 
 		ImGui.TextUnformatted($"Semantic Color Grid - Current Theme: {themeNames[selectedThemeIndex]}");
+		ImGui.Separator();
+
+		// Show complete palette info
+		ImmutableDictionary<SemanticColorRequest, PerceptualColor> completePalette = SemanticColorMapper.GetCompletePalette(theme);
+		ImGui.TextUnformatted($"Complete Palette: {completePalette.Count} colors generated");
+		ImGui.TextUnformatted($"Available Semantic Meanings: {theme.SemanticMapping.Count}");
+
 		ImGui.Separator();
 
 		// Get all semantic meanings and priorities
@@ -233,7 +236,7 @@ internal static class Program
 			ImGui.TableSetupColumn("Semantic", ImGuiTableColumnFlags.WidthFixed, 100);
 			foreach (Priority priority in sortedPriorities)
 			{
-				ImGui.TableSetupColumn(priority.ToString(), ImGuiTableColumnFlags.WidthFixed, 80);
+				ImGui.TableSetupColumn(priority.ToString(), ImGuiTableColumnFlags.WidthFixed, 100);
 			}
 			ImGui.TableHeadersRow();
 
@@ -257,7 +260,7 @@ internal static class Program
 					if (color != default)
 					{
 						Vector4 colorVec = new(color.RgbValue.R, color.RgbValue.G, color.RgbValue.B, 1.0f);
-						Vector2 swatchSize = new(70, 30);
+						Vector2 swatchSize = new(90, 30);
 
 						if (ImGui.ColorButton($"##{meaning}_{priority}", colorVec, ImGuiColorEditFlags.NoTooltip, swatchSize))
 						{
@@ -365,7 +368,7 @@ internal static class Program
 				ImGui.TextUnformatted("Priority → Mapped Lightness (Interpolation/Extrapolation):");
 
 				// Get complete mapping for this semantic meaning (more efficient than individual requests)
-				ImmutableDictionary<SemanticColorRequest, PerceptualColor> completeMapping = GetCompleteMappingForSemantic(currentMeaning);
+				ImmutableDictionary<SemanticColorRequest, PerceptualColor> completeMapping = GetCompleteMappingForSemantic();
 
 				if (ImGui.BeginTable("PriorityMappingTable", 5, ImGuiTableFlags.Borders | ImGuiTableFlags.RowBg))
 				{
@@ -731,32 +734,34 @@ internal static class Program
 		}
 	}
 
+	// Cache for complete theme palette
+	private static ISemanticTheme? cachedTheme;
+	private static ImmutableDictionary<SemanticColorRequest, PerceptualColor>? cachedCompletePalette;
+
 	private static PerceptualColor GetColorFromTheme(SemanticColorRequest request)
 	{
-		// Check if we have cached mapping for this semantic meaning
-		if (cachedMeaning != request.Meaning || cachedMapping == null)
+		// Check if we have cached complete palette for this theme
+		if (cachedTheme != theme || cachedCompletePalette == null)
 		{
-			// Generate complete mapping for all priorities of this semantic meaning
-			List<SemanticColorRequest> requests = [request];
-			cachedMapping = SemanticColorMapper.MapColors(requests, theme);
-			cachedMeaning = request.Meaning;
+			// Generate complete palette for entire theme (more efficient than individual requests)
+			cachedCompletePalette = SemanticColorMapper.GetCompletePalette(theme);
+			cachedTheme = theme;
 		}
 
-		return cachedMapping.TryGetValue(request, out PerceptualColor color) ? color : default;
+		return cachedCompletePalette.TryGetValue(request, out PerceptualColor color) ? color : default;
 	}
 
-	private static ImmutableDictionary<SemanticColorRequest, PerceptualColor> GetCompleteMappingForSemantic(SemanticMeaning meaning)
+	private static ImmutableDictionary<SemanticColorRequest, PerceptualColor> GetCompleteMappingForSemantic()
 	{
-		// Check if we have cached mapping for this semantic meaning
-		if (cachedMeaning != meaning || cachedMapping == null)
+		// Check if we have cached complete palette for this theme
+		if (cachedTheme != theme || cachedCompletePalette == null)
 		{
-			// Generate complete mapping for all priorities of this semantic meaning
-			List<SemanticColorRequest> requests = [new(meaning, Priority.Medium)]; // Just need one request to trigger full mapping
-			cachedMapping = SemanticColorMapper.MapColors(requests, theme);
-			cachedMeaning = meaning;
+			// Generate complete palette for entire theme
+			cachedCompletePalette = SemanticColorMapper.GetCompletePalette(theme);
+			cachedTheme = theme;
 		}
 
-		return cachedMapping;
+		return cachedCompletePalette;
 	}
 
 	private static Vector4 ToImVec4(RgbColor color, float alpha = 1.0f) => new(color.R, color.G, color.B, alpha);

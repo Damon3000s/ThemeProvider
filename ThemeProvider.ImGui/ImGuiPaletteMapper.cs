@@ -26,7 +26,11 @@ public sealed class ImGuiPaletteMapper : IPaletteMapper<ImGuiCol, Vector4>
 	{
 		ArgumentNullException.ThrowIfNull(theme);
 
-		Dictionary<ImGuiCol, SemanticColorRequest> requests = new()
+		// Get the complete palette for the theme (more efficient than individual requests)
+		ImmutableDictionary<SemanticColorRequest, PerceptualColor> completePalette = SemanticColorMapper.GetCompletePalette(theme);
+
+		// Define the mapping from ImGui colors to semantic color requests
+		Dictionary<ImGuiCol, SemanticColorRequest> colorMapping = new()
 		{
 			{ ImGuiCol.WindowBg, new(SemanticMeaning.Neutral, Priority.VeryLow)},
 			{ ImGuiCol.ChildBg, new(SemanticMeaning.Neutral, Priority.Low)},
@@ -94,14 +98,11 @@ public sealed class ImGuiPaletteMapper : IPaletteMapper<ImGuiCol, Vector4>
 			{ ImGuiCol.BorderShadow, new(SemanticMeaning.Neutral, Priority.Low) },
 		};
 
-		// Map the semantic color requests to actual colors
-		ImmutableDictionary<SemanticColorRequest, PerceptualColor> mappedColors = SemanticColorMapper.MapColors(requests.Values, theme);
-
-		// Convert the PerceptualColors to Vector4 format for ImGui
+		// Convert the semantic colors to ImGui Vector4 format
 		Dictionary<ImGuiCol, Vector4> result = [];
-		foreach ((ImGuiCol imguiCol, SemanticColorRequest request) in requests)
+		foreach ((ImGuiCol imguiCol, SemanticColorRequest request) in colorMapping)
 		{
-			if (mappedColors.TryGetValue(request, out PerceptualColor color))
+			if (completePalette.TryGetValue(request, out PerceptualColor color))
 			{
 				RgbColor rgb = color.RgbValue;
 				result[imguiCol] = new Vector4(rgb.R, rgb.G, rgb.B, 1.0f);
