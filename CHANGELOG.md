@@ -1,3 +1,8 @@
+## v1.0.7 (patch)
+
+Changes since v1.0.6:
+
+- Add complete palette generation and improve ImGui color mapping ([@matt-edmondson](https://github.com/matt-edmondson))
 ## v1.0.6 (patch)
 
 Changes since v1.0.5:
@@ -5,7 +10,7 @@ Changes since v1.0.5:
 - [patch] Force patch ([@matt-edmondson](https://github.com/matt-edmondson))
 ## v1.0.6-pre.1 (prerelease)
 
-Changes since v1.0.5:
+Incremental prerelease update.
 ## v1.0.5 (patch)
 
 Changes since v1.0.4:
