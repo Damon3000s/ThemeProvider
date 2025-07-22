@@ -3,7 +3,6 @@
 // Licensed under the MIT license.
 
 namespace ktsu.ThemeProvider;
-
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Collections.ObjectModel;
