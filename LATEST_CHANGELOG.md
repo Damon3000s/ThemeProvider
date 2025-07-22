@@ -1,5 +1,5 @@
-## v1.0.7 (patch)
+## v1.0.8 (patch)
 
-Changes since v1.0.6:
+Changes since v1.0.7:
 
-- Add complete palette generation and improve ImGui color mapping ([@matt-edmondson](https://github.com/matt-edmondson))
+- Refactor method name for palette generation in SemanticColorMapper ([@matt-edmondson](https://github.com/matt-edmondson))
