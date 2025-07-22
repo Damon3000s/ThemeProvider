@@ -1,5 +1,5 @@
-## v1.0.5 (patch)
+## v1.0.6-pre.1 (prerelease)
 
-Changes since v1.0.4:
+Changes since v1.0.5:
 
-- Upgrade ktsu.Sdk to version 1.49.0 ([@matt-edmondson](https://github.com/matt-edmondson))
+- Update package versions and UI color mappings ([@matt-edmondson](https://github.com/matt-edmondson))
