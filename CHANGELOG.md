@@ -1,5 +1,8 @@
 ## v1.0.9-pre.1 (prerelease)
 
+Incremental prerelease update.
+## v1.0.9-pre.1 (prerelease)
+
 Changes since v1.0.8:
 ## v1.0.8 (patch)
 
