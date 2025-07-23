@@ -1,6 +1,6 @@
-## v1.0.8
+## v1.0.9-pre.1 (prerelease)
 
-No significant changes detected since v1.0.8.
+Changes since v1.0.8:
 ## v1.0.8 (patch)
 
 Changes since v1.0.7:
