@@ -20,10 +20,23 @@ public readonly record struct RgbColor(float R, float G, float B)
 	/// </summary>
 	public static RgbColor FromHex(string hex)
 	{
+#if !NET6_0_OR_GREATER
+		ArgumentNullExceptionPolyfill.ThrowIfNull(hex);
+#else
 		ArgumentNullException.ThrowIfNull(hex);
+#endif
+
+#if NET5_0_OR_GREATER || NETSTANDARD2_1
 		if (hex.StartsWith('#'))
+#else
+		if (hex.StartsWith("#"))
+#endif
 		{
+#if NET5_0_OR_GREATER || NETSTANDARD2_1
 			hex = hex[1..];
+#else
+			hex = hex.Substring(1);
+#endif
 		}
 
 		if (hex.Length != 6)
@@ -31,11 +44,19 @@ public readonly record struct RgbColor(float R, float G, float B)
 			throw new ArgumentException("Invalid hex color format", nameof(hex));
 		}
 
+#if NET5_0_OR_GREATER || NETSTANDARD2_1
 		return FromBytes(
 			Convert.ToByte(hex[0..2], 16),
 			Convert.ToByte(hex[2..4], 16),
 			Convert.ToByte(hex[4..6], 16)
 		);
+#else
+		return FromBytes(
+			Convert.ToByte(hex.Substring(0, 2), 16),
+			Convert.ToByte(hex.Substring(2, 2), 16),
+			Convert.ToByte(hex.Substring(4, 2), 16)
+		);
+#endif
 	}
 
 	/// <summary>

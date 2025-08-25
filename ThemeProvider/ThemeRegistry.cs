@@ -4,8 +4,6 @@
 
 namespace ktsu.ThemeProvider;
 
-using System.Collections.Immutable;
-
 /// <summary>
 /// Provides centralized access to all available themes with metadata.
 /// </summary>
@@ -34,7 +32,7 @@ public static class ThemeRegistry
 	/// </summary>
 	[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1506:AvoidExcessiveClassCoupling",
 		Justification = "Theme registry is designed to reference all available themes")]
-	public static ImmutableArray<ThemeInfo> AllThemes { get; } = [
+	public static IReadOnlyList<ThemeInfo> AllThemes { get; } = [
 		// Catppuccin Family (4 variants)
 		new ThemeInfo("Catppuccin Latte", "Catppuccin", "Latte", false, "Warm light theme with pastel colors", () => new Themes.Catppuccin.Latte()),
 		new ThemeInfo("Catppuccin Frappe", "Catppuccin", "Frappe", true, "Soft dark theme with muted pastels", () => new Themes.Catppuccin.Frappe()),
@@ -93,26 +91,28 @@ public static class ThemeRegistry
 	/// <summary>
 	/// Gets themes grouped by family.
 	/// </summary>
-	public static ImmutableDictionary<string, ImmutableArray<ThemeInfo>> ThemesByFamily { get; } =
+	public static IReadOnlyDictionary<string, IReadOnlyList<ThemeInfo>> ThemesByFamily { get; } =
 		AllThemes.GroupBy(t => t.Family)
-			.ToImmutableDictionary(g => g.Key, g => g.ToImmutableArray());
+			.ToDictionary<IGrouping<string, ThemeInfo>, string, IReadOnlyList<ThemeInfo>>(
+				g => g.Key,
+				g => [.. g]);
 
 	/// <summary>
 	/// Gets all dark themes.
 	/// </summary>
-	public static ImmutableArray<ThemeInfo> DarkThemes { get; } =
+	public static IReadOnlyList<ThemeInfo> DarkThemes { get; } =
 		[.. AllThemes.Where(t => t.IsDark)];
 
 	/// <summary>
 	/// Gets all light themes.
 	/// </summary>
-	public static ImmutableArray<ThemeInfo> LightThemes { get; } =
+	public static IReadOnlyList<ThemeInfo> LightThemes { get; } =
 		[.. AllThemes.Where(t => !t.IsDark)];
 
 	/// <summary>
 	/// Gets all theme families.
 	/// </summary>
-	public static ImmutableArray<string> Families { get; } =
+	public static IReadOnlyList<string> Families { get; } =
 		[.. AllThemes.Select(t => t.Family).Distinct().OrderBy(f => f)];
 
 	/// <summary>
@@ -131,14 +131,20 @@ public static class ThemeRegistry
 	/// </summary>
 	/// <param name="family">The family name</param>
 	/// <returns>Array of themes in the family</returns>
-	public static ImmutableArray<ThemeInfo> GetThemesInFamily(string family) =>
-		ThemesByFamily.TryGetValue(family, out ImmutableArray<ThemeInfo> themes) ? themes : [];
+	public static IReadOnlyList<ThemeInfo> GetThemesInFamily(string family)
+	{
+		if (ThemesByFamily.TryGetValue(family, out IReadOnlyList<ThemeInfo>? themes) && themes is not null)
+		{
+			return [.. themes];
+		}
+		return [];
+	}
 
 	/// <summary>
 	/// Creates instances of all themes.
 	/// </summary>
 	/// <returns>Array of all theme instances</returns>
-	public static ImmutableArray<ISemanticTheme> CreateAllThemeInstances() =>
+	public static IReadOnlyList<ISemanticTheme> CreateAllThemeInstances() =>
 		[.. AllThemes.Select(t => t.CreateInstance())];
 
 	/// <summary>
@@ -146,6 +152,6 @@ public static class ThemeRegistry
 	/// </summary>
 	/// <param name="family">The family name</param>
 	/// <returns>Array of theme instances in the family</returns>
-	public static ImmutableArray<ISemanticTheme> CreateThemeInstancesInFamily(string family) =>
+	public static IReadOnlyList<ISemanticTheme> CreateThemeInstancesInFamily(string family) =>
 		[.. GetThemesInFamily(family).Select(t => t.CreateInstance())];
 }

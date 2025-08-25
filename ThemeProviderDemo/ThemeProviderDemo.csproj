@@ -1,4 +1,11 @@
-﻿<Project Sdk="ktsu.Sdk.ImGuiApp">
+﻿<Project>
+  <Sdk Name="Microsoft.NET.Sdk" />
+  <Sdk Name="ktsu.Sdk" />
+  <Sdk Name="ktsu.Sdk.App" />
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+  </PropertyGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\ThemeProvider\ThemeProvider.csproj" />

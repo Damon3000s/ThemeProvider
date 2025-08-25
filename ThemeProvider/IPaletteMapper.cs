@@ -3,7 +3,6 @@
 // Licensed under the MIT license.
 
 namespace ktsu.ThemeProvider;
-using System.Collections.Immutable;
 
 /// <summary>
 /// Interface for mapping semantic themes to UI framework-specific color palettes.
@@ -24,5 +23,5 @@ public interface IPaletteMapper<TColorKey, TColorValue>
 	/// </summary>
 	/// <param name="theme">The semantic theme to map from</param>
 	/// <returns>A dictionary mapping framework color keys to color values</returns>
-	public ImmutableDictionary<TColorKey, TColorValue> MapTheme(ISemanticTheme theme);
+	public IReadOnlyDictionary<TColorKey, TColorValue> MapTheme(ISemanticTheme theme);
 }

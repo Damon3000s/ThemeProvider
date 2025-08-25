@@ -4,7 +4,6 @@
 
 namespace ktsu.ThemeProvider;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Collections.ObjectModel;
 using System.Linq;
 
@@ -22,24 +21,33 @@ public sealed class SemanticColorMapper
 	/// <param name="requests">The collection of semantic color requests to map</param>
 	/// <param name="theme">The semantic theme providing available colors for each meaning</param>
 	/// <returns>A dictionary mapping each request to its assigned color, including all priority levels for the requested semantic meanings</returns>
-	public static ImmutableDictionary<SemanticColorRequest, PerceptualColor> MapColors(
+	public static IReadOnlyDictionary<SemanticColorRequest, PerceptualColor> MapColors(
 		IEnumerable<SemanticColorRequest> requests,
 		ISemanticTheme theme)
 	{
+#if !NET6_0_OR_GREATER
+		ArgumentNullExceptionPolyfill.ThrowIfNull(requests);
+		ArgumentNullExceptionPolyfill.ThrowIfNull(theme);
+#else
 		ArgumentNullException.ThrowIfNull(requests);
 		ArgumentNullException.ThrowIfNull(theme);
+#endif
 
 		List<SemanticColorRequest> requestsList = [.. requests];
 		if (requestsList.Count == 0)
 		{
-			return ImmutableDictionary<SemanticColorRequest, PerceptualColor>.Empty;
+			return new Dictionary<SemanticColorRequest, PerceptualColor>();
 		}
 
 		// Calculate the global lightness range for use by all semantics
 		(float globalMinLightness, float globalMaxLightness) = CalculateGlobalLightnessRange(theme);
 
 		// Always use ALL possible priority levels for consistent mapping
+#if NET5_0_OR_GREATER
 		Priority[] allPriorities = Enum.GetValues<Priority>();
+#else
+		Priority[] allPriorities = (Priority[])Enum.GetValues(typeof(Priority));
+#endif
 		List<Priority> priorityLevels = [.. allPriorities.OrderBy(p => p)];
 
 		Dictionary<SemanticColorRequest, PerceptualColor> result = [];
@@ -73,7 +81,7 @@ public sealed class SemanticColorMapper
 			}
 		}
 
-		return result.ToImmutableDictionary();
+		return result;
 	}
 
 	/// <summary>
@@ -82,20 +90,28 @@ public sealed class SemanticColorMapper
 	/// </summary>
 	/// <param name="theme">The semantic theme to generate the complete palette from</param>
 	/// <returns>A dictionary mapping every possible semantic color request to its assigned color</returns>
-	public static ImmutableDictionary<SemanticColorRequest, PerceptualColor> MakeCompletePalette(ISemanticTheme theme)
+	public static IReadOnlyDictionary<SemanticColorRequest, PerceptualColor> MakeCompletePalette(ISemanticTheme theme)
 	{
+#if !NET6_0_OR_GREATER
+		ArgumentNullExceptionPolyfill.ThrowIfNull(theme);
+#else
 		ArgumentNullException.ThrowIfNull(theme);
+#endif
 
 		// Get all available semantic meanings from the theme
 		HashSet<SemanticMeaning> availableMeanings = [.. theme.SemanticMapping.Keys];
 
 		if (availableMeanings.Count == 0)
 		{
-			return ImmutableDictionary<SemanticColorRequest, PerceptualColor>.Empty;
+			return new Dictionary<SemanticColorRequest, PerceptualColor>();
 		}
 
 		// Get all possible priorities
+#if NET5_0_OR_GREATER
 		Priority[] allPriorities = Enum.GetValues<Priority>();
+#else
+		Priority[] allPriorities = (Priority[])Enum.GetValues(typeof(Priority));
+#endif
 
 		// Generate requests for all combinations of meanings and priorities
 		List<SemanticColorRequest> allPossibleRequests = [];
@@ -121,10 +137,12 @@ public sealed class SemanticColorMapper
 		float globalMin = float.MaxValue;
 		float globalMax = float.MinValue;
 
-		foreach ((SemanticMeaning meaning, Collection<PerceptualColor> colors) in theme.SemanticMapping)
+		foreach (KeyValuePair<SemanticMeaning, Collection<PerceptualColor>> kvp in theme.SemanticMapping)
 		{
-			foreach (PerceptualColor color in colors)
+			Collection<PerceptualColor> colors = kvp.Value;
+			for (int i = 0; i < colors.Count; i++)
 			{
+				PerceptualColor color = colors[i];
 				if (color.Lightness < globalMin)
 				{
 					globalMin = color.Lightness;
@@ -157,7 +175,11 @@ public sealed class SemanticColorMapper
 		bool isDarkTheme)
 	{
 		// Get all priorities and find the position of the current priority
+#if NET5_0_OR_GREATER
 		Priority[] allPriorities = Enum.GetValues<Priority>();
+#else
+		Priority[] allPriorities = (Priority[])Enum.GetValues(typeof(Priority));
+#endif
 		int priorityIndex = Array.IndexOf(allPriorities, priority);
 
 		if (allPriorities.Length == 1)
@@ -203,7 +225,11 @@ public sealed class SemanticColorMapper
 			targetLightness = maxLightness - (position * lightnessRange);
 		}
 
+#if NET6_0_OR_GREATER
 		return Math.Clamp(targetLightness, 0.0f, 1.0f);
+#else
+		return CompatMath.Clamp(targetLightness, 0.0f, 1.0f);
+#endif
 	}
 
 	/// <summary>
@@ -222,14 +248,18 @@ public sealed class SemanticColorMapper
 		if (availableColors.Count == 1)
 		{
 			// Single color - extrapolate by adjusting lightness while preserving hue and chroma
-			return ExtrapolateColorToLightness(availableColors.First(), targetLightness);
+			return ExtrapolateColorToLightness(availableColors[0], targetLightness);
 		}
 
 		// Multiple colors - find the best interpolation or extrapolation
 		List<PerceptualColor> colorsList = [.. availableColors.OrderBy(c => c.Lightness)];
 
-		float minLightness = colorsList.First().Lightness;
-		float maxLightness = colorsList.Last().Lightness;
+		float minLightness = colorsList[0].Lightness;
+#if NET5_0_OR_GREATER || NETSTANDARD2_1
+		float maxLightness = colorsList[^1].Lightness;
+#else
+		float maxLightness = colorsList[colorsList.Count - 1].Lightness;
+#endif
 
 		// If target is within the range, interpolate between the closest colors
 		if (targetLightness >= minLightness && targetLightness <= maxLightness)
@@ -241,12 +271,16 @@ public sealed class SemanticColorMapper
 		if (targetLightness < minLightness)
 		{
 			// Extrapolate from the darkest color
-			return ExtrapolateColorToLightness(colorsList.First(), targetLightness);
+			return ExtrapolateColorToLightness(colorsList[0], targetLightness);
 		}
 		else
 		{
 			// Extrapolate from the lightest color
-			return ExtrapolateColorToLightness(colorsList.Last(), targetLightness);
+#if NET5_0_OR_GREATER || NETSTANDARD2_1
+			return ExtrapolateColorToLightness(colorsList[^1], targetLightness);
+#else
+			return ExtrapolateColorToLightness(colorsList[colorsList.Count - 1], targetLightness);
+#endif
 		}
 	}
 
@@ -260,7 +294,7 @@ public sealed class SemanticColorMapper
 
 		// Start with the target lightness and original chroma
 		OklabColor targetOklab = new(
-			L: Math.Clamp(targetLightness, 0.0f, 1.0f),
+			L: CompatMath.Clamp(targetLightness, 0.0f, 1.0f),
 			A: baseOklab.A,
 			B: baseOklab.B
 		);
@@ -270,8 +304,8 @@ public sealed class SemanticColorMapper
 
 		// Check if RGB values are within valid range
 		bool inGamut = targetRgb.R >= 0f && targetRgb.R <= 1f &&
-					   targetRgb.G >= 0f && targetRgb.G <= 1f &&
-					   targetRgb.B >= 0f && targetRgb.B <= 1f;
+				   targetRgb.G >= 0f && targetRgb.G <= 1f &&
+				   targetRgb.B >= 0f && targetRgb.B <= 1f;
 
 		if (inGamut)
 		{
@@ -306,8 +340,8 @@ public sealed class SemanticColorMapper
 			RgbColor testRgb = ColorMath.OklabToRgb(testOklab);
 
 			bool testInGamut = testRgb.R >= 0f && testRgb.R <= 1f &&
-							   testRgb.G >= 0f && testRgb.G <= 1f &&
-							   testRgb.B >= 0f && testRgb.B <= 1f;
+						   testRgb.G >= 0f && testRgb.G <= 1f &&
+						   testRgb.B >= 0f && testRgb.B <= 1f;
 
 			if (testInGamut)
 			{
@@ -326,11 +360,19 @@ public sealed class SemanticColorMapper
 		RgbColor bestRgb = ColorMath.OklabToRgb(bestOklab);
 
 		// Final safety clamp (should not be needed if binary search worked correctly)
+#if NET6_0_OR_GREATER
 		bestRgb = new RgbColor(
 			Math.Clamp(bestRgb.R, 0f, 1f),
 			Math.Clamp(bestRgb.G, 0f, 1f),
 			Math.Clamp(bestRgb.B, 0f, 1f)
 		);
+#else
+		bestRgb = new RgbColor(
+			CompatMath.Clamp(bestRgb.R, 0f, 1f),
+			CompatMath.Clamp(bestRgb.G, 0f, 1f),
+			CompatMath.Clamp(bestRgb.B, 0f, 1f)
+		);
+#endif
 
 		return new PerceptualColor(bestRgb);
 	}
@@ -342,7 +384,11 @@ public sealed class SemanticColorMapper
 	{
 		// Find the two colors that bracket the target lightness
 		PerceptualColor lowerColor = sortedColors[0];
+#if NET5_0_OR_GREATER || NETSTANDARD2_1
 		PerceptualColor upperColor = sortedColors[^1];
+#else
+		PerceptualColor upperColor = sortedColors[sortedColors.Count - 1];
+#endif
 
 		for (int i = 0; i < sortedColors.Count - 1; i++)
 		{
@@ -357,7 +403,11 @@ public sealed class SemanticColorMapper
 		// Calculate interpolation factor
 		float lightnessRange = upperColor.Lightness - lowerColor.Lightness;
 		float t = lightnessRange == 0 ? 0.5f : (targetLightness - lowerColor.Lightness) / lightnessRange;
+#if NET6_0_OR_GREATER
 		t = Math.Clamp(t, 0f, 1f);
+#else
+		t = CompatMath.Clamp(t, 0f, 1f);
+#endif
 
 		// Interpolate in Oklab space
 		OklabColor interpolatedOklab = OklabColor.Lerp(
@@ -369,11 +419,19 @@ public sealed class SemanticColorMapper
 		RgbColor interpolatedRgb = ColorMath.OklabToRgb(interpolatedOklab);
 
 		// Clamp RGB values to valid range
+#if NET6_0_OR_GREATER
 		interpolatedRgb = new RgbColor(
 			Math.Clamp(interpolatedRgb.R, 0f, 1f),
 			Math.Clamp(interpolatedRgb.G, 0f, 1f),
 			Math.Clamp(interpolatedRgb.B, 0f, 1f)
 		);
+#else
+		interpolatedRgb = new RgbColor(
+			CompatMath.Clamp(interpolatedRgb.R, 0f, 1f),
+			CompatMath.Clamp(interpolatedRgb.G, 0f, 1f),
+			CompatMath.Clamp(interpolatedRgb.B, 0f, 1f)
+		);
+#endif
 
 		return new PerceptualColor(interpolatedRgb);
 	}

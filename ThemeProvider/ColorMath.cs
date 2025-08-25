@@ -127,11 +127,19 @@ public static class ColorMath
 			RgbColor adjustedRgb = OklabToRgb(adjusted);
 
 			// Clamp to valid RGB range
+#if NET6_0_OR_GREATER
 			adjustedRgb = new RgbColor(
 				Math.Clamp(adjustedRgb.R, 0f, 1f),
 				Math.Clamp(adjustedRgb.G, 0f, 1f),
 				Math.Clamp(adjustedRgb.B, 0f, 1f)
 			);
+#else
+			adjustedRgb = new RgbColor(
+				CompatMath.Clamp(adjustedRgb.R, 0f, 1f),
+				CompatMath.Clamp(adjustedRgb.G, 0f, 1f),
+				CompatMath.Clamp(adjustedRgb.B, 0f, 1f)
+			);
+#endif
 
 			float contrast = GetContrastRatio(adjustedRgb, background);
 

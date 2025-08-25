@@ -3,7 +3,7 @@
 // Licensed under the MIT license.
 
 namespace ktsu.ThemeProvider.ImGui;
-using System.Collections.Immutable;
+using System.Collections.Generic;
 using System.Numerics;
 using Hexa.NET.ImGui;
 using ktsu.ThemeProvider;
@@ -22,12 +22,19 @@ public sealed class ImGuiPaletteMapper : IPaletteMapper<ImGuiCol, Vector4>
 	/// <summary>
 	/// Maps a semantic theme to a complete ImGui color palette.
 	/// </summary>
-	public ImmutableDictionary<ImGuiCol, Vector4> MapTheme(ISemanticTheme theme)
+	public IReadOnlyDictionary<ImGuiCol, Vector4> MapTheme(ISemanticTheme theme)
 	{
+#if NET6_0_OR_GREATER
 		ArgumentNullException.ThrowIfNull(theme);
+#else
+		if (theme is null)
+		{
+			throw new ArgumentNullException(nameof(theme));
+		}
+#endif
 
 		// Get the complete palette for the theme (more efficient than individual requests)
-		ImmutableDictionary<SemanticColorRequest, PerceptualColor> completePalette = SemanticColorMapper.MakeCompletePalette(theme);
+		IReadOnlyDictionary<SemanticColorRequest, PerceptualColor> completePalette = SemanticColorMapper.MakeCompletePalette(theme);
 
 		// Define the mapping from ImGui colors to semantic color requests
 		Dictionary<ImGuiCol, SemanticColorRequest> colorMapping = new()
@@ -100,8 +107,10 @@ public sealed class ImGuiPaletteMapper : IPaletteMapper<ImGuiCol, Vector4>
 
 		// Convert the semantic colors to ImGui Vector4 format
 		Dictionary<ImGuiCol, Vector4> result = [];
-		foreach ((ImGuiCol imguiCol, SemanticColorRequest request) in colorMapping)
+		foreach (KeyValuePair<ImGuiCol, SemanticColorRequest> kv in colorMapping)
 		{
+			ImGuiCol imguiCol = kv.Key;
+			SemanticColorRequest request = kv.Value;
 			if (completePalette.TryGetValue(request, out PerceptualColor color))
 			{
 				RgbColor rgb = color.RgbValue;
@@ -109,6 +118,6 @@ public sealed class ImGuiPaletteMapper : IPaletteMapper<ImGuiCol, Vector4>
 			}
 		}
 
-		return result.ToImmutableDictionary();
+		return new System.Collections.ObjectModel.ReadOnlyDictionary<ImGuiCol, Vector4>(result);
 	}
 }

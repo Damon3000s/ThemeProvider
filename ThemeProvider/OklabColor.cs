@@ -3,6 +3,8 @@
 // Licensed under the MIT license.
 
 namespace ktsu.ThemeProvider;
+#pragma warning disable IDE0090
+
 using System.Numerics;
 
 /// <summary>

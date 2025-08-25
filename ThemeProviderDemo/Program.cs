@@ -3,8 +3,8 @@
 // Licensed under the MIT license.
 
 namespace ktsu.ThemeProviderDemo;
-using System.Collections.Immutable;
 using System.Collections.ObjectModel;
+using System.Collections.Generic;
 using System.Numerics;
 using Hexa.NET.ImGui;
 using ktsu.ImGuiApp;
@@ -111,7 +111,7 @@ internal static class Program
 	private static void ApplyTheme()
 	{
 		// Use the ImGui palette mapper system
-		ImmutableDictionary<ImGuiCol, Vector4> imguiColors = imguiMapper.MapTheme(theme);
+		IReadOnlyDictionary<ImGuiCol, Vector4> imguiColors = imguiMapper.MapTheme(theme);
 
 		ImGuiStylePtr style = ImGui.GetStyle();
 		Span<Vector4> colors = style.Colors;
@@ -133,19 +133,19 @@ internal static class Program
 		ImGui.Separator();
 
 		// Show theme statistics
-		ImGui.TextUnformatted($"Total Themes: {AllThemes.Length}");
-		ImGui.TextUnformatted($"Theme Families: {Families.Length}");
-		ImGui.TextUnformatted($"Dark Themes: {DarkThemes.Length}");
-		ImGui.TextUnformatted($"Light Themes: {LightThemes.Length}");
+		ImGui.TextUnformatted($"Total Themes: {AllThemes.Count}");
+		ImGui.TextUnformatted($"Theme Families: {Families.Count}");
+		ImGui.TextUnformatted($"Dark Themes: {DarkThemes.Count}");
+		ImGui.TextUnformatted($"Light Themes: {LightThemes.Count}");
 
 		ImGui.Separator();
 
 		// Browse by family
 		foreach (string family in Families)
 		{
-			ImmutableArray<ThemeInfo> themesInFamily = GetThemesInFamily(family);
+			IReadOnlyList<ThemeInfo> themesInFamily = GetThemesInFamily(family);
 
-			if (ImGui.CollapsingHeader($"{family} ({themesInFamily.Length} variants)", ImGuiTreeNodeFlags.DefaultOpen))
+			if (ImGui.CollapsingHeader($"{family} ({themesInFamily.Count} variants)", ImGuiTreeNodeFlags.DefaultOpen))
 			{
 				ImGui.Indent();
 
@@ -158,7 +158,7 @@ internal static class Program
 					ImGui.TableSetupColumn("Action");
 					ImGui.TableHeadersRow();
 
-					for (int i = 0; i < themesInFamily.Length; i++)
+					for (int i = 0; i < themesInFamily.Count; i++)
 					{
 						ThemeInfo themeInfo = themesInFamily[i];
 						ImGui.TableNextRow();
@@ -219,7 +219,7 @@ internal static class Program
 		ImGui.Separator();
 
 		// Show complete palette info
-		ImmutableDictionary<SemanticColorRequest, PerceptualColor> completePalette = SemanticColorMapper.MakeCompletePalette(theme);
+		IReadOnlyDictionary<SemanticColorRequest, PerceptualColor> completePalette = SemanticColorMapper.MakeCompletePalette(theme);
 		ImGui.TextUnformatted($"Complete Palette: {completePalette.Count} colors generated");
 		ImGui.TextUnformatted($"Available Semantic Meanings: {theme.SemanticMapping.Count}");
 
@@ -368,7 +368,7 @@ internal static class Program
 				ImGui.TextUnformatted("Priority → Mapped Lightness (Interpolation/Extrapolation):");
 
 				// Get complete mapping for this semantic meaning (more efficient than individual requests)
-				ImmutableDictionary<SemanticColorRequest, PerceptualColor> completeMapping = GetCompleteMappingForSemantic();
+				IReadOnlyDictionary<SemanticColorRequest, PerceptualColor> completeMapping = GetCompleteMappingForSemantic();
 
 				if (ImGui.BeginTable("PriorityMappingTable", 5, ImGuiTableFlags.Borders | ImGuiTableFlags.RowBg))
 				{
@@ -496,7 +496,7 @@ internal static class Program
 		ImGui.TextUnformatted($"Framework: {imguiMapper.FrameworkName}");
 
 		// Get the mapped colors
-		ImmutableDictionary<ImGuiCol, Vector4> mappedColors = imguiMapper.MapTheme(theme);
+		IReadOnlyDictionary<ImGuiCol, Vector4> mappedColors = imguiMapper.MapTheme(theme);
 
 		ImGui.TextUnformatted($"Total Mapped Colors: {mappedColors.Count}");
 
@@ -524,7 +524,7 @@ internal static class Program
 				Vector2 pos = ImGui.GetCursorScreenPos();
 				float swatchSize = 20f;
 				drawList.AddRectFilled(pos, new Vector2(pos.X + swatchSize, pos.Y + swatchSize),
-									   ImGui.ColorConvertFloat4ToU32(colorValue));
+								   ImGui.ColorConvertFloat4ToU32(colorValue));
 				drawList.AddRect(pos, new Vector2(pos.X + swatchSize, pos.Y + swatchSize),
 								ImGui.ColorConvertFloat4ToU32(new Vector4(1, 1, 1, 0.3f)));
 				ImGui.Dummy(new Vector2(swatchSize, swatchSize));
@@ -736,7 +736,7 @@ internal static class Program
 
 	// Cache for complete theme palette
 	private static ISemanticTheme? cachedTheme;
-	private static ImmutableDictionary<SemanticColorRequest, PerceptualColor>? cachedCompletePalette;
+	private static IReadOnlyDictionary<SemanticColorRequest, PerceptualColor>? cachedCompletePalette;
 
 	private static PerceptualColor GetColorFromTheme(SemanticColorRequest request)
 	{
@@ -751,7 +751,7 @@ internal static class Program
 		return cachedCompletePalette.TryGetValue(request, out PerceptualColor color) ? color : default;
 	}
 
-	private static ImmutableDictionary<SemanticColorRequest, PerceptualColor> GetCompleteMappingForSemantic()
+	private static IReadOnlyDictionary<SemanticColorRequest, PerceptualColor> GetCompleteMappingForSemantic()
 	{
 		// Check if we have cached complete palette for this theme
 		if (cachedTheme != theme || cachedCompletePalette == null)
