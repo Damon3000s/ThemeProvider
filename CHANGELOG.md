@@ -1,6 +1,9 @@
 ## v1.0.9-pre.3 (prerelease)
 
 Changes since v1.0.9-pre.2:
+## v1.0.9-pre.3 (prerelease)
+
+Changes since v1.0.9-pre.2:
 ## v1.0.9-pre.2 (prerelease)
 
 Changes since v1.0.9-pre.1:
