@@ -21,9 +21,9 @@ public static class ColorMath
 		float s = (0.0883024619f * rgb.R) + (0.2817188376f * rgb.G) + (0.6299787005f * rgb.B);
 
 		// Apply cube root
-		float l_ = MathF.Sign(l) * MathF.Pow(MathF.Abs(l), 1f / 3f);
-		float m_ = MathF.Sign(m) * MathF.Pow(MathF.Abs(m), 1f / 3f);
-		float s_ = MathF.Sign(s) * MathF.Pow(MathF.Abs(s), 1f / 3f);
+		float l_ = (float)(Math.Sign(l) * Math.Pow(Math.Abs(l), 1f / 3f));
+		float m_ = (float)(Math.Sign(m) * Math.Pow(Math.Abs(m), 1f / 3f));
+		float s_ = (float)(Math.Sign(s) * Math.Pow(Math.Abs(s), 1f / 3f));
 
 		// Convert to Lab
 		return new OklabColor(
@@ -127,19 +127,11 @@ public static class ColorMath
 			RgbColor adjustedRgb = OklabToRgb(adjusted);
 
 			// Clamp to valid RGB range
-#if NET6_0_OR_GREATER
 			adjustedRgb = new RgbColor(
-				Math.Clamp(adjustedRgb.R, 0f, 1f),
-				Math.Clamp(adjustedRgb.G, 0f, 1f),
-				Math.Clamp(adjustedRgb.B, 0f, 1f)
+				Math.Max(0f, Math.Min(adjustedRgb.R, 1f)),
+				Math.Max(0f, Math.Min(adjustedRgb.G, 1f)),
+				Math.Max(0f, Math.Min(adjustedRgb.B, 1f))
 			);
-#else
-			adjustedRgb = new RgbColor(
-				CompatMath.Clamp(adjustedRgb.R, 0f, 1f),
-				CompatMath.Clamp(adjustedRgb.G, 0f, 1f),
-				CompatMath.Clamp(adjustedRgb.B, 0f, 1f)
-			);
-#endif
 
 			float contrast = GetContrastRatio(adjustedRgb, background);
 

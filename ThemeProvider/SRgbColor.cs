@@ -20,11 +20,7 @@ public readonly record struct SRgbColor(float R, float G, float B)
 	/// </summary>
 	public static SRgbColor FromHex(string hex)
 	{
-#if !NET6_0_OR_GREATER
-		ArgumentNullExceptionPolyfill.ThrowIfNull(hex);
-#else
-		ArgumentNullException.ThrowIfNull(hex);
-#endif
+		Guard.NotNull(hex);
 
 #if NET5_0_OR_GREATER || NETSTANDARD2_1
 		if (hex.StartsWith('#'))
@@ -32,11 +28,7 @@ public readonly record struct SRgbColor(float R, float G, float B)
 		if (hex.StartsWith("#"))
 #endif
 		{
-#if NET5_0_OR_GREATER || NETSTANDARD2_1
 			hex = hex[1..];
-#else
-			hex = hex.Substring(1);
-#endif
 		}
 
 		if (hex.Length != 6)
@@ -44,19 +36,11 @@ public readonly record struct SRgbColor(float R, float G, float B)
 			throw new ArgumentException("Invalid hex color format", nameof(hex));
 		}
 
-#if NET5_0_OR_GREATER || NETSTANDARD2_1
 		return FromBytes(
 			Convert.ToByte(hex[0..2], 16),
 			Convert.ToByte(hex[2..4], 16),
 			Convert.ToByte(hex[4..6], 16)
 		);
-#else
-		return FromBytes(
-			Convert.ToByte(hex.Substring(0, 2), 16),
-			Convert.ToByte(hex.Substring(2, 2), 16),
-			Convert.ToByte(hex.Substring(4, 2), 16)
-		);
-#endif
 	}
 
 	/// <summary>
@@ -90,8 +74,8 @@ public readonly record struct SRgbColor(float R, float G, float B)
 
 	private static float SRgbToLinear(float sRgb)
 	{
-		return sRgb <= 0.04045f
+		return (float)(sRgb <= 0.04045f
 			? sRgb / 12.92f
-			: MathF.Pow((sRgb + 0.055f) / 1.055f, 2.4f);
+			: Math.Pow((sRgb + 0.055f) / 1.055f, 2.4f));
 	}
 }

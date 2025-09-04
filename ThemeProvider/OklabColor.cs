@@ -35,7 +35,7 @@ public readonly record struct OklabColor(float L, float A, float B)
 		float dl = L - other.L;
 		float da = A - other.A;
 		float db = B - other.B;
-		return MathF.Sqrt((dl * dl) + (da * da) + (db * db));
+		return (float)Math.Sqrt((dl * dl) + (da * da) + (db * db));
 	}
 
 	/// <summary>
@@ -57,8 +57,8 @@ public readonly record struct OklabColor(float L, float A, float B)
 	/// </summary>
 	public (float L, float C, float H) ToPolar()
 	{
-		float c = MathF.Sqrt((A * A) + (B * B));
-		float h = MathF.Atan2(B, A) * 180f / MathF.PI;
+		float c = (float)Math.Sqrt((A * A) + (B * B));
+		float h = (float)(Math.Atan2(B, A) * 180f / Math.PI);
 		if (h < 0)
 		{
 			h += 360f;
@@ -72,7 +72,7 @@ public readonly record struct OklabColor(float L, float A, float B)
 	/// </summary>
 	public static OklabColor FromPolar(float l, float c, float h)
 	{
-		float hRad = h * MathF.PI / 180f;
-		return new OklabColor(l, c * MathF.Cos(hRad), c * MathF.Sin(hRad));
+		float hRad = (float)(h * Math.PI / 180f);
+		return new OklabColor(l, c * Math.Cos(hRad), c * Math.Sin(hRad));
 	}
 }

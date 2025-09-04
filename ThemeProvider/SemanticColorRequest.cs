@@ -5,7 +5,7 @@
 namespace ktsu.ThemeProvider;
 
 /// <summary>
-/// 
+///
 /// </summary>
 public readonly record struct SemanticColorRequest
 {
