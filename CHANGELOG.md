@@ -1,3 +1,6 @@
+## v1.0.9
+
+No significant changes detected since v1.0.9.
 ## v1.0.9 (patch)
 
 Changes since v1.0.8:
@@ -13,7 +16,7 @@ Changes since v1.0.9-pre.1:
 - Bump the ktsu group with 1 update ([@dependabot[bot]](https://github.com/dependabot[bot]))
 ## v1.0.9-pre.1 (prerelease)
 
-Changes since v1.0.8:
+Incremental prerelease update.
 ## v1.0.8 (patch)
 
 Changes since v1.0.7:
