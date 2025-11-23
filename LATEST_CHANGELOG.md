@@ -1,5 +1,6 @@
-## v1.0.10 (patch)
+## v1.0.11-pre.1 (prerelease)
 
-Changes since v1.0.9:
+Changes since v1.0.10:
 
-- Refactor SonarQube scanner steps and update coverage report paths in CI workflow ([@matt-edmondson](https://github.com/matt-edmondson))
+- Sync scripts\PSBuild.psm1 ([@ktsu[bot]](https://github.com/ktsu[bot]))
+- Sync .github\workflows\dotnet.yml ([@ktsu[bot]](https://github.com/ktsu[bot]))
