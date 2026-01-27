@@ -3,11 +3,12 @@
 // Licensed under the MIT license.
 
 namespace ktsu.ThemeProviderDemo;
+
 using System.Collections.ObjectModel;
 using System.Collections.Generic;
 using System.Numerics;
 using Hexa.NET.ImGui;
-using ktsu.ImGuiApp;
+using ktsu.ImGui.App;
 using ktsu.ThemeProvider;
 using ktsu.ThemeProvider.ImGui;
 using static ktsu.ThemeProvider.ThemeRegistry;

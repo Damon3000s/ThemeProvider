@@ -4,7 +4,8 @@
   <Sdk Name="ktsu.Sdk.App" />
 
   <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
+    <TargetFrameworks></TargetFrameworks>
   </PropertyGroup>
 
   <ItemGroup>
@@ -14,7 +15,10 @@
 
   <ItemGroup>
     <PackageReference Include="Hexa.NET.ImGui" />
-    <PackageReference Include="ktsu.ImGuiApp" />
+    <PackageReference Include="ktsu.ImGui.App" />
+    <PackageReference Include="Microsoft.SourceLink.GitHub" />
+    <PackageReference Include="Microsoft.SourceLink.AzureRepos.Git" />
+    <PackageReference Include="Polyfill" PrivateAssets="all" />
   </ItemGroup>
 
 </Project>

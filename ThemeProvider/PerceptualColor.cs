@@ -3,6 +3,7 @@
 // Licensed under the MIT license.
 
 namespace ktsu.ThemeProvider;
+
 using System.Numerics;
 
 /// <summary>

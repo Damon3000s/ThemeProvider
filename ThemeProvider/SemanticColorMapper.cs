@@ -3,6 +3,7 @@
 // Licensed under the MIT license.
 
 namespace ktsu.ThemeProvider;
+
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -25,8 +26,8 @@ public sealed class SemanticColorMapper
 		IEnumerable<SemanticColorRequest> requests,
 		ISemanticTheme theme)
 	{
-		Guard.NotNull(requests);
-		Guard.NotNull(theme);
+		Ensure.NotNull(requests);
+		Ensure.NotNull(theme);
 
 		List<SemanticColorRequest> requestsList = [.. requests];
 		if (requestsList.Count == 0)
@@ -87,7 +88,7 @@ public sealed class SemanticColorMapper
 	/// <returns>A dictionary mapping every possible semantic color request to its assigned color</returns>
 	public static IReadOnlyDictionary<SemanticColorRequest, PerceptualColor> MakeCompletePalette(ISemanticTheme theme)
 	{
-		Guard.NotNull(theme);
+		Ensure.NotNull(theme);
 
 		// Get all available semantic meanings from the theme
 		HashSet<SemanticMeaning> availableMeanings = [.. theme.SemanticMapping.Keys];

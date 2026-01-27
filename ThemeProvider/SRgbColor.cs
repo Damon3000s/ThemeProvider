@@ -20,7 +20,7 @@ public readonly record struct SRgbColor(float R, float G, float B)
 	/// </summary>
 	public static SRgbColor FromHex(string hex)
 	{
-		Guard.NotNull(hex);
+		Ensure.NotNull(hex);
 
 #if NET5_0_OR_GREATER || NETSTANDARD2_1
 		if (hex.StartsWith('#'))

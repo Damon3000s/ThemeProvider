@@ -3,6 +3,7 @@
 // Licensed under the MIT license.
 
 namespace ktsu.ThemeProvider.ImGui;
+
 using System.Collections.Generic;
 using System.Numerics;
 using Hexa.NET.ImGui;
