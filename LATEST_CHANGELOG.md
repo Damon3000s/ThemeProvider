@@ -1,3 +1,7 @@
-## v1.0.11
+## v1.0.12-pre.1 (prerelease)
 
-No significant changes detected since v1.0.11.
+Changes since v1.0.11:
+
+- Sync .github\workflows\dotnet.yml ([@ktsu[bot]](https://github.com/ktsu[bot]))
+- Merge remote-tracking branch 'refs/remotes/origin/main' ([@ktsu[bot]](https://github.com/ktsu[bot]))
+- Sync .gitignore ([@ktsu[bot]](https://github.com/ktsu[bot]))
