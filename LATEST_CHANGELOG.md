@@ -1,9 +1,5 @@
-## v1.0.12-pre.1 (prerelease)
+## v1.0.12 (patch)
 
 Changes since v1.0.11:
 
-- Merge remote-tracking branch 'refs/remotes/origin/main' ([@ktsu[bot]](https://github.com/ktsu[bot]))
-- Sync .github\workflows\dotnet.yml ([@ktsu[bot]](https://github.com/ktsu[bot]))
-- Sync global.json ([@ktsu[bot]](https://github.com/ktsu[bot]))
-- Merge remote-tracking branch 'refs/remotes/origin/main' ([@ktsu[bot]](https://github.com/ktsu[bot]))
-- Sync .gitignore ([@ktsu[bot]](https://github.com/ktsu[bot]))
+- Refactor null check in MapTheme method to use Ensure.NotNull ([@matt-edmondson](https://github.com/matt-edmondson))
