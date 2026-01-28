@@ -25,14 +25,7 @@ public sealed class ImGuiPaletteMapper : IPaletteMapper<ImGuiCol, Vector4>
 	/// </summary>
 	public IReadOnlyDictionary<ImGuiCol, Vector4> MapTheme(ISemanticTheme theme)
 	{
-#if NET6_0_OR_GREATER
-		ArgumentNullException.ThrowIfNull(theme);
-#else
-		if (theme is null)
-		{
-			throw new ArgumentNullException(nameof(theme));
-		}
-#endif
+		Ensure.NotNull(theme);
 
 		// Get the complete palette for the theme (more efficient than individual requests)
 		IReadOnlyDictionary<SemanticColorRequest, PerceptualColor> completePalette = SemanticColorMapper.MakeCompletePalette(theme);
