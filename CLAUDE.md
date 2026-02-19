@@ -5,63 +5,81 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Build Commands
 
 ```bash
-# Build the entire solution
+# Restore, build, and test (standard workflow)
+dotnet restore
 dotnet build
 
 # Build specific project
 dotnet build ThemeProvider/ThemeProvider.csproj
 
-# Run the demo application (requires .NET 9)
+# Build specific configuration
+dotnet build -c Release
+
+# Run the demo application (requires .NET 10)
 dotnet run --project ThemeProviderDemo
 ```
 
-## Architecture Overview
+## Project Structure
 
-ThemeProvider is a semantic color theming library that uses meaning-based color specifications (Primary, Error, Warning, etc.) combined with priority levels to generate consistent, accessible color palettes across UI frameworks.
+This is a .NET library (`ktsu.ThemeProvider`) providing a semantic color theming system with 44 built-in themes and framework integration. The solution uses:
 
-### Core Projects
+- **ktsu.Sdk** - Custom SDK providing shared build configuration
+- Multi-targeting: net10.0;net9.0;net8.0;net7.0;net6.0;net5.0;netstandard2.0;netstandard2.1
 
-- **ThemeProvider** - Core library with semantic color system, 44 theme implementations, and color math
-- **ThemeProvider.ImGui** - Dear ImGui framework integration using Hexa.NET.ImGui
-- **ThemeProviderDemo** - Interactive demo using ktsu.ImGuiApp
+### Key Files
 
-### Key Abstractions
+- `ThemeProvider/ISemanticTheme.cs` - Core theme interface (SemanticMapping + IsDarkTheme)
+- `ThemeProvider/SemanticColorMapper.cs` - Maps semantic color requests to actual colors using Oklab color space
+- `ThemeProvider/ThemeRegistry.cs` - Central registration of all 44 themes with metadata and factory functions
+- `ThemeProvider/ColorMath.cs` - Color space conversions (RGB/Oklab), WCAG accessibility, and gradient generation
+- `ThemeProvider/PerceptualColor.cs` - Color representation with Oklab perceptual properties
+- `ThemeProvider/RgbColor.cs` - Linear RGB color with hex/byte conversions
+- `ThemeProvider/SRgbColor.cs` - sRGB gamma-corrected color with linear conversion
+- `ThemeProvider/OklabColor.cs` - Oklab perceptual color space with polar (LCh) support
+- `ThemeProvider/IPaletteMapper.cs` - Generic interface for framework-specific color mapping
+- `ThemeProvider/SemanticColorRequest.cs` - Readonly record struct combining SemanticMeaning + Priority
+- `ThemeProvider/SemanticMeaning.cs` - Enum of semantic color purposes (Neutral, Primary, Error, etc.)
+- `ThemeProvider/Priority.cs` - Enum of 7 priority levels (VeryLow to VeryHigh)
+- `ThemeProvider/ColorRange.cs` - Color range interpolation helper
+- `ThemeProvider/AccessibilityLevel.cs` - WCAG accessibility levels (Fail, AA, AAA)
+- `ThemeProvider/Themes/` - 44 theme implementations organized by family
+- `ThemeProvider.ImGui/ImGuiPaletteMapper.cs` - Dear ImGui integration mapping ImGuiCol to Vector4
+- `ThemeProviderDemo/Program.cs` - Interactive demo application using ktsu.ImGuiApp
 
-**ISemanticTheme** (`ThemeProvider/ISemanticTheme.cs`)
-- Themes implement this interface, providing `SemanticMapping` (dictionary of SemanticMeaning -> colors) and `IsDarkTheme` flag
-- Each theme defines static colors from its color palette and maps them to semantic meanings
+### Dependencies
 
-**SemanticColorMapper** (`ThemeProvider/SemanticColorMapper.cs`)
-- Maps `SemanticColorRequest` (meaning + priority) to actual colors
-- Uses global lightness range calculation across all theme colors
-- Interpolates/extrapolates colors in Oklab perceptual color space to achieve target lightness for each priority level
-- Dark themes: higher priority = higher lightness; Light themes: higher priority = lower lightness
+- **Polyfill** - Backfill support for newer .NET APIs on older targets
+- **System.Numerics.Vectors** - Vector types for netstandard2.0 target
+- **Hexa.NET.ImGui** - Dear ImGui bindings (ThemeProvider.ImGui project)
+- **ktsu.ImGui.App** - ImGui application framework (ThemeProviderDemo only)
 
-**IPaletteMapper<TColorKey, TColorValue>** (`ThemeProvider/IPaletteMapper.cs`)
-- Framework-specific mappers convert semantic themes to UI framework color dictionaries
-- `ImGuiPaletteMapper` maps all ImGuiCol enum values to semantic requests
+## Architecture
 
-**ThemeRegistry** (`ThemeProvider/ThemeRegistry.cs`)
-- Central registration of all 44 themes with metadata (name, family, variant, dark/light)
-- Factory functions for theme instantiation
+### Semantic Color System
+
+The library uses meaning-based color specifications instead of hardcoded colors:
+
+1. **ISemanticTheme** provides a `Dictionary<SemanticMeaning, Collection<PerceptualColor>>` mapping
+2. **SemanticColorMapper** maps `SemanticColorRequest` (meaning + priority) to actual colors
+3. The mapper calculates a global lightness range across all theme colors, then interpolates/extrapolates in Oklab space to achieve target lightness for each priority level
+4. Dark themes: higher priority = higher lightness; Light themes: higher priority = lower lightness
+5. Non-neutral meanings use 50-90% of the global lightness range; neutral uses the full range
 
 ### Adding New Themes
 
 1. Create a new class in `ThemeProvider/Themes/{Family}/{ThemeName}.cs`
-2. Implement `ISemanticTheme` with static colors and `SemanticMapping` dictionary
-3. Register in `ThemeRegistry.AllThemes` with metadata
+2. Implement `ISemanticTheme` with static `PerceptualColor` fields from hex values using `PerceptualColor.FromRgb("#hex")`
+3. Map semantic meanings to color collections (Neutral typically gets multiple colors; other meanings get single accent colors)
+4. Register in `ThemeRegistry.AllThemes` with a `ThemeInfo` record
 
-Theme pattern (see `ThemeProvider/Themes/Catppuccin/Mocha.cs`):
-- Define static `PerceptualColor` fields from hex values using `PerceptualColor.FromRgb("#hex")`
-- Map semantic meanings (Neutral, Primary, Alternate, Success, Warning, Error, etc.) to color collections
-- Neutral typically gets multiple colors for lightness gradient; other meanings usually get single accent colors
+### Framework Integration
 
-### Color System
+Framework mappers implement `IPaletteMapper<TColorKey, TColorValue>` to convert semantic themes to framework-specific color dictionaries. `ImGuiPaletteMapper` is the built-in implementation for Dear ImGui.
 
-- **SemanticMeaning**: Purpose-based categories (Neutral, Primary, Alternate, Success, CallToAction, Information, Caution, Warning, Error, Failure, Debug)
-- **Priority**: 7 levels from VeryLow to VeryHigh controlling lightness/intensity
-- **PerceptualColor**: Wraps RGB with Oklab conversions for perceptually uniform operations
+## CI/CD
 
-### Project SDK
+Uses `scripts/PSBuild.psm1` PowerShell module for CI pipeline. Version increments are controlled by commit message tags: `[major]`, `[minor]`, `[patch]`, `[pre]`.
 
-Projects use `ktsu.Sdk` (custom SDK) which handles common configuration. Target framework is .NET 9 for the demo app.
+## Code Quality
+
+Do not add global suppressions for warnings. Use explicit suppression attributes with justifications when needed, with preprocessor defines only as fallback. Make the smallest, most targeted suppressions possible.
